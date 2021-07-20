@@ -13,6 +13,9 @@
 #include "internal/pycore_ast.h"
 #include "internal/pycore_parser.h"
 
+#define DEFAULT_SYNTAX_ERROR_LINE 1
+#define DEFAULT_SYNTAX_ERROR_COLUMN 0
+
 static value Val_some(value v) {
   CAMLparam1(v);
   CAMLlocal1(some);
@@ -87,13 +90,13 @@ static void raise_parsing_error_from_last_python_exception() {
   PyObject *type, *value, *traceback;
   PyErr_Fetch(&type, &value, &traceback);
   if (value == NULL) {
-    raise_parsing_error("Parsing failed but location cannot be extracted", 1,
-                        1);
+    raise_parsing_error("Parsing failed but location cannot be extracted",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   const char *msg = NULL;
-  long line = 1;
-  long column = 1;
+  long line = DEFAULT_SYNTAX_ERROR_LINE;
+  long column = DEFAULT_SYNTAX_ERROR_COLUMN;
 
   PyObject *name_object = PyObject_GetAttrString(type, "__name__");
   const char *exception_name = PyUnicode_AsUTF8(name_object);
@@ -2252,14 +2255,15 @@ CAMLprim value cpython_parse_module(value filename_value, value input_value) {
   PyObject *filename = PyUnicode_FromString(String_val(filename_value));
   if (filename == NULL) {
     raise_parsing_error(
-        "CPython Internal error: filename PyObject conversion failed", 1, 1);
+        "CPython Internal error: filename PyObject conversion failed",
+        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   PyArena *arena = _PyArena_New();
   if (arena == NULL) {
     Py_DECREF(filename);
-    raise_parsing_error("CPython Internal error: Arena allocation failed", 1,
-                        1);
+    raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   PyCompilerFlags flags = _PyCompilerFlags_INIT;
@@ -2294,8 +2298,8 @@ CAMLprim value cpython_parse_expression(value input_value) {
 
   PyArena *arena = _PyArena_New();
   if (arena == NULL) {
-    raise_parsing_error("CPython Internal error: Arena allocation failed", 1,
-                        1);
+    raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   PyCompilerFlags flags = _PyCompilerFlags_INIT;
@@ -2329,8 +2333,8 @@ CAMLprim value cpython_parse_function_type(value input_value) {
 
   PyArena *arena = _PyArena_New();
   if (arena == NULL) {
-    raise_parsing_error("CPython Internal error: Arena allocation failed", 1,
-                        1);
+    raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   PyCompilerFlags flags = _PyCompilerFlags_INIT;

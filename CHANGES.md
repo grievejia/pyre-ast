@@ -2,6 +2,8 @@
 
 ### Bug Fixed
 
+- Column number of default parsing error starts from 0 instead of 1.
+
 ### Changed
 
 ### Deprecated
