@@ -6,6 +6,7 @@
 (generate_opam_files true)
 
 (source (github grievejia/pyre-ast))
+(documentation "https://grievejia.github.io/pyre-ast/doc")
 (license MIT)
 (authors "Jia Chen")
 (maintainers "grievejia@gmail.com")

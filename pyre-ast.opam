@@ -8,6 +8,7 @@ maintainer: ["grievejia@gmail.com"]
 authors: ["Jia Chen"]
 license: "MIT"
 homepage: "https://github.com/grievejia/pyre-ast"
+doc: "https://grievejia.github.io/pyre-ast/doc"
 bug-reports: "https://github.com/grievejia/pyre-ast/issues"
 depends: [
   "dune" {>= "2.8" & > "2.0"}

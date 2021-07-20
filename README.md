@@ -23,7 +23,7 @@ It is recommended to use [dune](https://dune.readthedocs.io/en/stable/) as your 
   (libraries pyre-ast))
 ```
 
-> :warning: **TODO**: Setup API doc here
+Documentation of this library can be found [here](https://grievejia.github.io/pyre-ast/doc/pyre-ast/).
 
 ## Development
 
