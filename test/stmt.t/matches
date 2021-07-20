@@ -1,0 +1,13 @@
+match x:
+  case None:
+    pass
+  case 42:
+    pass
+  case foo if foo > 0:
+    pass
+  case foo as bar:
+    pass
+  case ["foo", *bar, "baz"]:
+    pass
+  case { "x": ("foo" | "bar"), "y": bar, **rest }:
+    pass

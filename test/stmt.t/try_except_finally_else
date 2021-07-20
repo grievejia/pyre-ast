@@ -1,0 +1,11 @@
+try:
+    x = y
+    return x
+except Foo as foo:
+    return foo
+except Bar:
+    return None
+else:
+    baz()
+finally:
+    qux()

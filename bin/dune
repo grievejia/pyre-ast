@@ -1,0 +1,3 @@
+(executable
+ (name pyre_parse)
+ (libraries pyreAst stdio sexplib cmdliner))

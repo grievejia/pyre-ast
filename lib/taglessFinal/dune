@@ -1,0 +1,33 @@
+(subdir
+ vendor/Modules
+ (dirs :standard _*))
+
+(rule
+ (deps
+  (source_tree vendor))
+ (targets libpython.a pyconfig.h)
+ (action
+  (no-infer
+   (progn
+    (chdir
+     vendor
+     (setenv
+      MACOSX_DEPLOYMENT_TARGET
+      11.0
+      (progn
+       (run ./configure --with-lto)
+       (run make libpython3.10.a))))
+    (copy vendor/libpython3.10.a libpython.a)
+    (copy vendor/pyconfig.h pyconfig.h)))))
+
+(library
+ (name taglessFinal)
+ (package pyre-ast)
+ (libraries base)
+ (no_dynlink)
+ (foreign_stubs
+  (language c)
+  (names binding)
+  (flags :standard -Ivendor/Include -I.))
+ (c_library_flags -lpython)
+ (foreign_archives python))

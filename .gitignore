@@ -1,0 +1,25 @@
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+
+_build/
+_opam/
+
+# ocamlbuild targets
+*.byte
+*.native
+
+# Merlin configuring file for Vim and Emacs
+.merlin
+
+# Emacs-specific
+.projectile
+
+# OS-specific
+.DS_Store

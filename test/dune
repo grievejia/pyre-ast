@@ -1,0 +1,7 @@
+(env
+ (_
+  (binaries
+   (../bin/pyre_parse.exe as parse))))
+
+(cram
+ (deps %{bin:parse}))

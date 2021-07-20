@@ -1,0 +1,5 @@
+with (
+    CtxManager1(),
+    CtxManager2() as example,
+):
+    pass

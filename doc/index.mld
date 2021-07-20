@@ -1,0 +1,56 @@
+{0 [pyre-ast]}
+
+[pyre-ast] is an OCaml library to parse Python files.
+
+The library features its full-fidelity to the official Python spec. Apart from a few technical edge cases, as long as a given file can be parsed by the CPython interpreter, [pyre-ast] will be able to parse the file without any problem. Furthermore, abstract syntax trees obtained from [pyre-ast] is guaranteed to 100% match the results obtained by Python's own {{:https://docs.python.org/3/library/ast.html#ast.parse}[ast.parse]} API, down to every AST node and every line and column number. 
+
+Another notable feature of this library is that it represents the Python syntax using the {{:http://okmij.org/ftp/tagless-final/JFP.pdf}tagless-final style}. This style typically offers more flexibility and extensibility for the downstream consumers of the syntax, and allow them to build up their analysis without explicitly constructing a syntax tree. On the other hand, this library does offer a tranditional "concrete" syntax tree structure as well, for developers who are less familiar with the tagless-final approach and more familiar with standard algebraic data type representation. 
+
+{1 Quick Start}
+
+{2 Installation}
+
+To install [pyre-ast] with [opam], you can run [opam install pyre-ast].
+
+{2 Use in a Dune project}
+
+To use [pyre-ast] in your dune project, you can add [pyre-ast] to the [libraries] stanza in your dune file. For example,
+
+{[
+(library
+  (name mylib)
+  (libraries pyre-ast))
+]}
+
+{2 Parsing APIs}
+
+All parsing APIs are located in the {!module: PyreAst.Parser} module. 
+
+Take a look at {!module: PyreAst.Parser.Concrete} if all you want is to obtain a traditional abstract syntax tree. For example, the following function takes a string, parse it as a Python module, and return the corresponding AST:
+
+{[
+let example content =
+  let open PyreAst.Parser in
+  with_context (fun context ->
+  	match Concrete.parse_module ~context content with
+  	| Result.Error { Error.message; line; column } ->
+  	  let message = 
+  	    Format.sprintf "Parsing error at line %d, column %d: %s"
+  	    message line column
+  	  in
+  	  failwith message
+  	| Result.Ok ast -> ast
+  )
+]}
+
+Alternatively if you want to use the tagless-final approach, you want to use the {!module: PyreAst.Parser.TaglessFinal} module. This module exposes the same set of interfaces as {!module: PyreAst.Parser.Concrete}, except each interface now takes an additional [spec] argument which reifies your downstream logic. 
+
+{2 Syntax Representation}
+
+[pyre-ast] closely mimics Python's {{:https://docs.python.org/3/library/ast.html}[ast]} module for its representation of the Python abstract syntax. There is almost a 1:1 correspondence between classes in the [ast] module and entities in [pyre-ast]'s interfaces. If you are unsure about the meaning of certain interface in [pyre-ast], Python's own documentation might be a useful external reference.
+
+As mentioned above, [pyre-ast] supports two flavors of syntax representations. The traditional "concrete" abstract syntax tree is defined in module {!module: PyreAst.Concrete}, whereas the tagless-finaly style syntax is defined in module {!module: PyreAst.TaglessFinal}. Note that under the hood, the former is implemented on top of the latter, so only the tagless-final APIs are considered the "core" APIs of this library. 
+
+{1 API References}
+
+{!modules: PyreAst}

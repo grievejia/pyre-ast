@@ -1,0 +1,4 @@
+for x, y in l():  # type: Tuple[int, int]
+    foo(x, y)
+else:
+    pass
