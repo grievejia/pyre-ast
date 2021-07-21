@@ -6,6 +6,8 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 
+#define Val_none Val_int(0)
+
 // CPython-related includes
 #define PY_SSIZE_T_CLEAN
 #define Py_BUILD_CORE // Required to include internal headers

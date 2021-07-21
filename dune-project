@@ -23,6 +23,7 @@
   (ppx_hash (>= v0.14.0))
   (ppx_deriving (>= 5.2.1))
   (ppx_make (>= 0.2.1))
+  (stdio (and :with-test (>= v0.14.0)))
   (sexplib (and :with-test (>= v0.14.0)))
   (cmdliner (and :with-test (>= 1.0.0)))
 ))
