@@ -33,7 +33,7 @@ It is recommended to use a [local switch](https://opam.ocaml.org/blog/opam-local
 $ git clone https://github.com/grievejia/pyre-ast.git
 $ cd pyre-ast
 $ opam switch create ./ 4.12.0
-$ opam install . --deps-only
-$ dune build  # Build the library
-$ dune test   # Run tests
+$ opam install . --deps-only --with-test
+$ dune build @install  # Build the library
+$ dune test            # Run tests
 ```
