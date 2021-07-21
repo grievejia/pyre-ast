@@ -1,3 +1,7 @@
+## 0.1.2 (2021-07-20)
+
+- Fix linking flags and tests on Linux.
+
 ## 0.1.1 (2021-07-20)
 
 - Column number of default parsing error starts from 0 instead of 1.
