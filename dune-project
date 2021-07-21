@@ -1,6 +1,6 @@
 (lang dune 2.8)
 (name pyre-ast)
-(version 0.1.0)
+(version 0.1.1)
 (cram enable)
 
 (generate_opam_files true)
@@ -16,7 +16,7 @@
  (synopsis "Full-fidelity Python parser in OCaml")
  (description "pyre-ast is an OCaml library to parse Python source files into abstract syntax trees. Under the hood, it relies on the CPython parser to do the parsing work and therefore the result is always 100% compatible with the official CPython implementation.")
  (depends
-  (dune (> 2.0))
+  (dune (>= 2.7))
   (base (>= v0.14.1))
   (ppx_sexp_conv (>= v0.14.0))
   (ppx_compare (>= v0.14.0))

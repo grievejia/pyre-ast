@@ -111,7 +111,7 @@ let default_cmd =
   let sdocs = Manpage.s_common_options in
   let exits = Term.default_exits in
   ( Term.(ret (const (`Help (`Pager, None)))),
-    Term.info "pyre-parse" ~version:"0.1.0" ~doc ~sdocs ~exits ~man:help_sections )
+    Term.info "pyre-parse" ~version:"dev" ~doc ~sdocs ~exits ~man:help_sections )
 
 let cmds = [ parse_module_cmd; parse_expression_cmd; parse_function_type_cmd ]
 
