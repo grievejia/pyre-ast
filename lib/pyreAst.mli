@@ -891,7 +891,7 @@ def foo(
 
               - [targets] is the "index variable" of the statement. It can only be one of a selected
                 few kinds of expressions, and the corresponding expression context will always be
-                set to {!field: ExpressionContext.del}. See documentation of {!module:
+                set to {!field: ExpressionContext.store}. See documentation of {!module:
                 ExpressionContext} for more details of which expressions are allowed.
               - [iter] is the expression that is being iterated on.
               - [body] is the body of the loop.
