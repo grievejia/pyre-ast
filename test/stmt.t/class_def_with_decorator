@@ -1,0 +1,4 @@
+@bar
+@baz(qux, 42)
+class Foo:
+  pass

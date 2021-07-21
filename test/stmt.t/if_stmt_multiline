@@ -1,0 +1,4 @@
+if derp():
+  True
+else:
+  False

@@ -154,7 +154,7 @@ Test function def stmt
           ((start ((line 1) (column 38))) (stop ((line 1) (column 42))))))))
       (decorator_list ()) (returns ()) (type_comment ()))))
    (type_ignores ()))
-  $ echo "@bar\n@baz(qux, 42)\ndef foo(): pass" | parse module -
+  $ parse module function_def_with_decorator
   ((body
     ((FunctionDef
       (location ((start ((line 3) (column 0))) (stop ((line 3) (column 15)))))
@@ -230,7 +230,7 @@ Test function def stmt
          (id int) (ctx Load))))
       (type_comment ()))))
    (type_ignores ()))
-  $ echo "def foo(x): # type: (int) -> int\n  ..." | parse module -
+  $ parse module function_def_with_type_comment
   ((body
     ((FunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 2) (column 5)))))
@@ -298,7 +298,7 @@ Test function def stmt
           ((start ((line 9) (column 4))) (stop ((line 9) (column 8))))))))
       (decorator_list ()) (returns ()) (type_comment ("(...) -> bool")))))
    (type_ignores ()))
-  $ echo "def foo():\n  x\n  y" | parse module -
+  $ parse module function_def_multiline
   ((body
     ((FunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 3) (column 3)))))
@@ -407,7 +407,7 @@ Test class def stmt
           ((start ((line 1) (column 40))) (stop ((line 1) (column 44))))))))
       (decorator_list ()))))
    (type_ignores ()))
-  $ echo "class Foo:\n  def foo(self) -> int:\n    return 42" | parse module -
+  $ parse module class_def_with_method
   ((body
     ((ClassDef
       (location ((start ((line 1) (column 0))) (stop ((line 3) (column 13)))))
@@ -443,7 +443,7 @@ Test class def stmt
          (type_comment ()))))
       (decorator_list ()))))
    (type_ignores ()))
-  $ echo "@bar\n@baz(qux, 42)\nclass Foo:\n  pass" | parse module -
+  $ parse module class_def_with_decorator
   ((body
     ((ClassDef
       (location ((start ((line 3) (column 0))) (stop ((line 4) (column 6)))))
@@ -999,7 +999,7 @@ Test while stmt
           ((start ((line 1) (column 13))) (stop ((line 1) (column 17))))))))
       (orelse ()))))
    (type_ignores ()))
-  $ echo "while derp():\n  z\nelse:\n  w" | parse module -
+  $ parse module while_multiline
   ((body
     ((While
       (location ((start ((line 1) (column 0))) (stop ((line 4) (column 3)))))
@@ -1058,7 +1058,7 @@ Test if stmt
           ((start ((line 1) (column 10))) (stop ((line 1) (column 14))))))))
       (orelse ()))))
    (type_ignores ()))
-  $ echo "if derp():\n  True\nelse:\n  False" | parse module -
+  $ parse module if_stmt_multiline
   ((body
     ((If
       (location ((start ((line 1) (column 0))) (stop ((line 4) (column 7)))))
@@ -1092,7 +1092,7 @@ Test if stmt
    (type_ignores ()))
 
 Test with stmt
-  $ echo "with foo() as bar: # type: int\n  pass" | parse module -
+  $ parse module with_stmt_with_type_comment
   ((body
     ((With
       (location ((start ((line 1) (column 0))) (stop ((line 2) (column 6)))))
