@@ -1,3 +1,7 @@
+## unreleased
+
+- Fix crashes when parsing non-UTF8-decodable string literals.
+
 ## 0.1.2 (2021-07-20)
 
 - Fix linking flags and tests on Linux.

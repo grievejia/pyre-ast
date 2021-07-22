@@ -198,8 +198,11 @@ module TaglessFinal : sig
       string_ : string -> 'a;
           (** Represents Python string literals (e.g. ["derp"]).
 
-              Unlike non-ascii identifiers, non-ascii string literals can be parsed properly by this
-              library. That also means it has no trouble handling strings with embedded null bytes. *)
+              At OCaml level, the value of the string literal is a UTF-8 decoded byte array of the
+              original string literal in Python. If the original literal cannot be UTF-8 decoded,
+              the {{:https://docs.python.org/3/library/codecs.html#error-handlers}
+              [backslahreplace]} error handler is used, which replaces the un-decodable parts with
+              backslashed escape sequence. *)
       byte_string : string -> 'a;
           (** Represents Python string literals (e.g. [b"derp"]).
 

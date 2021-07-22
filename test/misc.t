@@ -25,3 +25,14 @@ Non-ascii characters in string literals is ok
 Non-ascii characters in variable name is not ok
   $ echo 'Δx' | parse module -
   Parse error at line 1, column 0: CPython runtime raised a non-syntax exception
+
+Unicode surrogate should not crash the parser
+  $ echo '"\ud83d"' | parse module -
+  ((body
+    ((Expr
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
+      (value
+       (Constant
+        (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
+        (value (String "\\ud83d")) (kind ()))))))
+   (type_ignores ()))

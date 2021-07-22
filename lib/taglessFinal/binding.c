@@ -33,6 +33,9 @@ static value PyUnicode_to_ocaml_string(PyObject *object) {
   // Explicitly get the size to avoid issues with embedded null bytes.
   Py_ssize_t size;
   const char *data = PyUnicode_AsUTF8AndSize(object, &size);
+  if (data == NULL) {
+    caml_failwith("UTF8 casting failed");
+  }
   result = caml_alloc_initialized_string(size, data);
 
   CAMLreturn(result);
@@ -50,6 +53,25 @@ static value PyBytes_to_ocaml_string(PyObject *object) {
     caml_failwith("Unable to read byte string literal");
   }
   result = caml_alloc_initialized_string(size, buffer);
+
+  CAMLreturn(result);
+}
+
+// Mostly similar to PyUnicode_to_ocaml_string, except the string gets encoded
+// instead of casted to UTF8. This function can handle more inputs than
+// PyUnicdoe_to_ocaml_string, but it cost one more allocation. Avoid calling
+// this if the given object is known to be UTF8-encoded to begin with.
+static value PyUnicode_to_encoded_ocaml_string(PyObject *object) {
+  CAMLparam0();
+  CAMLlocal1(result);
+
+  PyObject *bytes_object =
+      PyUnicode_AsEncodedString(object, "utf-8", "backslashreplace");
+  if (bytes_object == NULL) {
+    caml_failwith("UTF8 encoding failed");
+  }
+  result = PyBytes_to_ocaml_string(bytes_object);
+  Py_DECREF(bytes_object);
 
   CAMLreturn(result);
 }
@@ -369,7 +391,7 @@ CAMLprim value visit_constant(value visitor_value, PyObject *object) {
     }
   } else if (PyUnicode_Check(object)) {
     result = caml_callback(CONSTANT_STRING(visitor_value),
-                           PyUnicode_to_ocaml_string(object));
+                           PyUnicode_to_encoded_ocaml_string(object));
   } else if (PyFloat_Check(object)) {
     result = caml_callback(CONSTANT_FLOAT(visitor_value),
                            caml_copy_double(PyFloat_AsDouble(object)));
