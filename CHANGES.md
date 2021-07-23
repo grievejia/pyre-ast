@@ -1,4 +1,4 @@
-## unreleased
+## 0.1.3 (2021-7-22)
 
 - Fix crashes when parsing non-UTF8-decodable string literals.
 - \N escape sequence in string literals will no longer cause a syntax error.
