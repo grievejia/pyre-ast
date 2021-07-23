@@ -202,7 +202,11 @@ module TaglessFinal : sig
               original string literal in Python. If the original literal cannot be UTF-8 decoded,
               the {{:https://docs.python.org/3/library/codecs.html#error-handlers}
               [backslahreplace]} error handler is used, which replaces the un-decodable parts with
-              backslashed escape sequence. *)
+              backslashed escape sequence.
+
+              Note that due to technical limitations, \N escape sequence translation is not
+              supported: String literal "\N\{FOO\}" will be treated as an ascii string of length 7
+              as opposed to a Unicode string of length 1. *)
       byte_string : string -> 'a;
           (** Represents Python string literals (e.g. [b"derp"]).
 
@@ -1705,10 +1709,10 @@ end
       invoking its parser. The low-level details are abstracted away with the {!module:
       Parser.Context} module, but the fact that no parsing can be done prior to obtaining a {!type:
       Parser.Context.t} still holds.
-    - As of the latest release, I have yet to find an easy way for the parser to handle Unicode
-      identifier names. Unicode characters in string literals are fine, but Unicode identifier name
-      is something that a barely-initialized CPython runtime cannot handle even with utf-8 mode
-      enabled. *)
+    - Unicode support is crippled. A large part of Unicode handling in CPython is provided via
+      extension modules, which a barely-initialized CPython runtime cannot handle. For example,
+      Unicode character in identifier name is not allowed, and "\N" escape sequence in string
+      literals are not properly translated. *)
 module Parser : sig
   (** This module contains a type that abstracts away the details of global states required to set
       up the parser. *)

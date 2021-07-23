@@ -1,6 +1,7 @@
 ## unreleased
 
 - Fix crashes when parsing non-UTF8-decodable string literals.
+- \N escape sequence in string literals will no longer cause a syntax error.
 
 ## 0.1.2 (2021-07-20)
 

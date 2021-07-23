@@ -6556,44 +6556,6 @@ _PyUnicode_DecodeUnicodeEscape(const char *s,
             WRITE_CHAR(ch);
             continue;
 
-            /* \N{name} */
-        case 'N':
-            if (ucnhash_capi == NULL) {
-                /* load the unicode data module */
-                ucnhash_capi = (_PyUnicode_Name_CAPI *)PyCapsule_Import(
-                                                PyUnicodeData_CAPSULE_NAME, 1);
-                if (ucnhash_capi == NULL) {
-                    PyErr_SetString(
-                        PyExc_UnicodeError,
-                        "\\N escapes not supported (can't load unicodedata module)"
-                        );
-                    goto onError;
-                }
-            }
-
-            message = "malformed \\N character escape";
-            if (s < end && *s == '{') {
-                const char *start = ++s;
-                size_t namelen;
-                /* look for the closing brace */
-                while (s < end && *s != '}')
-                    s++;
-                namelen = s - start;
-                if (namelen && s < end) {
-                    /* found a name.  look it up in the unicode database */
-                    s++;
-                    ch = 0xffffffff; /* in case 'getcode' messes up */
-                    if (namelen <= INT_MAX &&
-                        ucnhash_capi->getcode(start, (int)namelen,
-                                              &ch, 0)) {
-                        assert(ch <= MAX_UNICODE);
-                        WRITE_CHAR(ch);
-                        continue;
-                    }
-                    message = "unknown Unicode character name";
-                }
-            }
-            goto error;
 
         default:
             if (*first_invalid_escape == NULL) {
