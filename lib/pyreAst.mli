@@ -1708,10 +1708,12 @@ end
       invoking its parser. The low-level details are abstracted away with the {!module:
       Parser.Context} module, but the fact that no parsing can be done prior to obtaining a {!type:
       Parser.Context.t} still holds.
-    - Unicode support is crippled. A large part of Unicode handling in CPython is provided via
+    - Text encoding support is crippled. A large part of Unicode handling in CPython is provided via
       extension modules, which a barely-initialized CPython runtime cannot handle. For example,
       Unicode character in identifier name is not allowed, and "\N" escape sequence in string
-      literals are not properly translated. *)
+      literals are not properly translated. What's more, the [-*- coding: X -*-] header (see
+      {{:https://www.python.org/dev/peps/pep-0263/} PEP 263}) is mostly not supported unless [X] is
+      [utf-8]. *)
 module Parser : sig
   (** This module contains a type that abstracts away the details of global states required to set
       up the parser. *)
