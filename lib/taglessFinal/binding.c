@@ -70,6 +70,7 @@ static value PyUnicode_to_encoded_ocaml_string(PyObject *object) {
   if (bytes_object == NULL) {
     caml_failwith("UTF8 encoding failed");
   }
+  // TODO: If this call raises, we would leak `bytes_object`
   result = PyBytes_to_ocaml_string(bytes_object);
   Py_DECREF(bytes_object);
 
