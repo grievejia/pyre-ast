@@ -1698,12 +1698,11 @@ end
     syntactical constructs. These APIs will always hand back a {!type: Result.t} where if the
     parsing fails, a {!type: Parser.Error.t} gets returned.
 
-    Under the hood, this library actually compiles and calls into the actual CPython parser code
-    (with {{:https://docs.python.org/3.10/library/ast.html#ast.PyCF_TYPE_COMMENTS}
-    PyCF_TYPE_COMMENTS} flag enabled), and then it walk through the CPython AST and translate them
-    into OCaml structures via C bindings. This is how 100% fidelity with the official CPython
-    implementation is achieved -- we are actually relying on exactly the same parser implementation
-    that CPython uses. This approach has some notable implications:
+    Under the hood, this library actually compiles and calls into the actual CPython parser code,
+    and then walks through the CPython AST translating them into OCaml structures via C bindings.
+    This is how 100% fidelity with the official CPython implementation is achieved -- we are
+    actually relying on exactly the same parser implementation that CPython uses. This approach has
+    some notable implications:
 
     - The parsing APIs are stateful as one need to intialize/finalize CPython runtime before
       invoking its parser. The low-level details are abstracted away with the {!module:
@@ -1762,6 +1761,7 @@ module Parser : sig
       spec:
         (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _) TaglessFinal.t ->
       ?filename:string ->
+      ?enable_type_comment:bool ->
       string ->
       ('module_, Error.t) Result.t
     (** [parse_module ~context ~spec input] takes the string [input] and parse it as Python module
@@ -1769,7 +1769,11 @@ module Parser : sig
         meaning of the [context] argument.
 
         Optionally a [filename] argument can be specified. If there is a parse error, [filename]
-        will appear in the {!field: Error.message} field. *)
+        will appear in the {!field: Error.message} field.
+
+        Optionally an [enable_type_comment] argument can be specified. If it is true, the parser
+        will attempt to populate the [type_comment] section of each AST node that has it. Otherwise,
+        contents in comments will all get ignored and [type_comment] will always be unset. *)
 
     val parse_expression :
       context:Context.t ->
@@ -1802,7 +1806,11 @@ module Parser : sig
       ('expression, Error.t) Result.t
     (** [parse_expression ~context ~spec input] takes the string [input] and parse it as Python
         expression using tagless-final specification [spec]. See documentation of {!type: Context.t}
-        for the meaning of the [context] argument. *)
+        for the meaning of the [context] argument.
+
+        Optionally an [enable_type_comment] argument can be specified. If it is true, the parser
+        will attempt to populate the [type_comment] section of each AST node that has it. Otherwise,
+        contents in comments will all get ignored and [type_comment] will always be unset. *)
 
     val parse_function_type :
       context:Context.t ->
@@ -1852,12 +1860,20 @@ module Parser : sig
       {!module:Parser.TaglessFinal} module. *)
   module Concrete : sig
     val parse_module :
-      context:Context.t -> ?filename:string -> string -> (Concrete.Module.t, Error.t) result
+      context:Context.t ->
+      ?filename:string ->
+      ?enable_type_comment:bool ->
+      string ->
+      (Concrete.Module.t, Error.t) result
     (** [parse_module ~context input] takes the string [input] and parse into a Python module. See
         documentation of {!type: Context.t} for the meaning of the [context] argument.
 
         Optionally a [filename] argument can be specified. If there is a parse error, [filename]
         will appear in the {!field: Error.message} field.
+
+        Optionally an [enable_type_comment] argument can be specified. If it is true, the parser
+        will attempt to populate the [type_comment] section of each AST node that has it. Otherwise,
+        contents in comments will all get ignored and [type_comment] will always be unset.
 
         Calling this function is equivalent to calling {!val: TaglessFinal.parse_module} with [spec]
         set to the return value of {!val: PyreAst.Concrete.make_tagless_final}. *)

@@ -2273,8 +2273,10 @@ static struct RawModule RawModule_val(value v) {
   return result;
 }
 
-CAMLprim value cpython_parse_module(value filename_value, value input_value) {
-  CAMLparam2(filename_value, input_value);
+CAMLprim value cpython_parse_module(value filename_value,
+                                    value type_comment_value,
+                                    value input_value) {
+  CAMLparam3(filename_value, type_comment_value, input_value);
   CAMLlocal1(result);
 
   PyObject *filename = PyUnicode_FromString(String_val(filename_value));
@@ -2292,7 +2294,9 @@ CAMLprim value cpython_parse_module(value filename_value, value input_value) {
   }
 
   PyCompilerFlags flags = _PyCompilerFlags_INIT;
-  flags.cf_flags |= PyCF_TYPE_COMMENTS;
+  if (Bool_val(type_comment_value)) {
+    flags.cf_flags |= PyCF_TYPE_COMMENTS;
+  }
   mod_ty ast = _PyParser_ASTFromString(String_val(input_value), filename,
                                        Py_file_input, &flags, arena);
 
@@ -2327,11 +2331,9 @@ CAMLprim value cpython_parse_expression(value input_value) {
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
-  PyCompilerFlags flags = _PyCompilerFlags_INIT;
-  flags.cf_flags |= PyCF_TYPE_COMMENTS;
   mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
                                        _PyUnicode_FromId(&Dummy_filename),
-                                       Py_eval_input, &flags, arena);
+                                       Py_eval_input, NULL, arena);
   if (ast == NULL) {
     _PyArena_Free(arena);
     raise_parsing_error_from_last_python_exception();
@@ -2362,11 +2364,9 @@ CAMLprim value cpython_parse_function_type(value input_value) {
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
-  PyCompilerFlags flags = _PyCompilerFlags_INIT;
-  flags.cf_flags |= PyCF_TYPE_COMMENTS;
   mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
                                        _PyUnicode_FromId(&Dummy_filename),
-                                       Py_func_type_input, &flags, arena);
+                                       Py_func_type_input, NULL, arena);
   if (ast == NULL) {
     _PyArena_Free(arena);
     raise_parsing_error_from_last_python_exception();

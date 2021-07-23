@@ -8,7 +8,7 @@ external finalize_python_runtime : unit -> unit = "finalize_python_runtime"
 
 type raw_module
 
-external cpython_parse_module : string -> string -> raw_module = "cpython_parse_module"
+external cpython_parse_module : string -> bool -> string -> raw_module = "cpython_parse_module"
 
 external cpython_convert_module :
   (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _) Spec.t ->
@@ -56,9 +56,9 @@ let exception_to_result f =
   try Result.Ok (f ())
   with ParsingError (message, line, column) -> Result.Error { ParseError.message; line; column }
 
-let parse_module ~context:_ ~spec ?(filename = "<unknown>") input =
+let parse_module ~context:_ ~spec ?(filename = "<unknown>") ?(enable_type_comment = false) input =
   let do_parse () =
-    let raw_module = cpython_parse_module filename input in
+    let raw_module = cpython_parse_module filename enable_type_comment input in
     Base.Exn.protectx ~f:(cpython_convert_module spec) raw_module ~finally:cpython_release_module
   in
   exception_to_result do_parse

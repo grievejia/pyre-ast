@@ -16,12 +16,12 @@ let handle_result ~f = function
   | Result.Ok result -> f result
   | Result.Error message -> Format.eprintf "%s\n" message
 
-let parse_module filename =
+let parse_module enable_type_comment filename =
   let result =
     let open Base.Result in
     read_file_content filename >>= fun content ->
     parse content ~f:(fun ~context content ->
-        Parser.Concrete.parse_module ~context ~filename content)
+        Parser.Concrete.parse_module ~context ~filename ~enable_type_comment content)
   in
   handle_result result ~f:(fun ast ->
       Format.printf "%a\n" Sexplib.Sexp.pp_hum (Concrete.Module.sexp_of_t ast))
@@ -61,6 +61,10 @@ let filename_arg =
   let doc = "File name to be parsed. If the name is '-', read from stdin." in
   Arg.(required & pos 0 (some string) None & info [] ~docv:"FILE_NAME" ~doc)
 
+let type_comment_arg =
+  let doc = "Whether to parse type comments or not" in
+  Arg.(value & flag & info [ "c"; "enable-type-comment" ] ~doc)
+
 let parse_module_cmd =
   let doc = "Parse the given input file as a Python module." in
   let exits = Term.default_exits in
@@ -73,7 +77,7 @@ let parse_module_cmd =
       `Blocks help_sections;
     ]
   in
-  ( Term.(const parse_module $ filename_arg),
+  ( Term.(const parse_module $ type_comment_arg $ filename_arg),
     Term.info "module" ~doc ~sdocs:Manpage.s_common_options ~exits ~man )
 
 let parse_expression_cmd =

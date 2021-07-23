@@ -230,7 +230,7 @@ Test function def stmt
          (id int) (ctx Load))))
       (type_comment ()))))
    (type_ignores ()))
-  $ parse module function_def_with_type_comment
+  $ parse module --enable-type-comment function_def_with_type_comment
   ((body
     ((FunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 2) (column 5)))))
@@ -253,7 +253,7 @@ Test function def stmt
            (value Ellipsis) (kind ()))))))
       (decorator_list ()) (returns ()) (type_comment ("(int) -> int")))))
    (type_ignores ()))
-  $ parse module param_type_comment
+  $ parse module --enable-type-comment param_type_comment
   ((body
     ((FunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 9) (column 8)))))
@@ -552,7 +552,7 @@ Test assign stmt
         (value (Integer 42)) (kind ())))
       (type_comment ()))))
    (type_ignores ()))
-  $ echo "x = 42 # type: int" | parse module -
+  $ echo "x = 42 # type: int" | parse module --enable-type-comment -
   ((body
     ((Assign
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 18)))))
@@ -894,7 +894,7 @@ Test for stmt
           ((start ((line 1) (column 12))) (stop ((line 1) (column 16))))))))
       (orelse ()) (type_comment ()))))
    (type_ignores ()))
-  $ parse module for_with_else
+  $ parse module --enable-type-comment for_with_else
   ((body
     ((For
       (location ((start ((line 1) (column 0))) (stop ((line 4) (column 8)))))
@@ -1092,7 +1092,7 @@ Test if stmt
    (type_ignores ()))
 
 Test with stmt
-  $ parse module with_stmt_with_type_comment
+  $ parse module --enable-type-comment with_stmt_with_type_comment
   ((body
     ((With
       (location ((start ((line 1) (column 0))) (stop ((line 2) (column 6)))))
