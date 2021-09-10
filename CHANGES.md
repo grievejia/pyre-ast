@@ -1,3 +1,7 @@
+## unreleased
+
+- Bump the bundled CPython version to 3.10.0rc2
+
 ## 0.1.3 (2021-7-22)
 
 - Fix crashes when parsing non-UTF8-decodable string literals.

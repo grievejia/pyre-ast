@@ -1257,7 +1257,7 @@ Test fstrings
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
       (value
        (Name
-        (location ((start ((line 1) (column 1))) (stop ((line 1) (column 2)))))
+        (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion 115) (format_spec ())))))
   $ echo 'f"{x!r}"' | parse expression -
@@ -1268,7 +1268,7 @@ Test fstrings
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
       (value
        (Name
-        (location ((start ((line 1) (column 1))) (stop ((line 1) (column 2)))))
+        (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion 114) (format_spec ())))))
   $ echo 'f"{x!a}"' | parse expression -
@@ -1279,7 +1279,7 @@ Test fstrings
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
       (value
        (Name
-        (location ((start ((line 1) (column 1))) (stop ((line 1) (column 2)))))
+        (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion 97) (format_spec ())))))
   $ echo 'f"{x:1.2}"' | parse expression -
@@ -1290,7 +1290,7 @@ Test fstrings
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 10)))))
       (value
        (Name
-        (location ((start ((line 1) (column 1))) (stop ((line 1) (column 2)))))
+        (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion -1)
       (format_spec
@@ -1310,7 +1310,7 @@ Test fstrings
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
       (value
        (Name
-        (location ((start ((line 1) (column 1))) (stop ((line 1) (column 2)))))
+        (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion -1)
       (format_spec

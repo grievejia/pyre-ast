@@ -165,7 +165,7 @@ Module functions and constants
    does not include the type, i. e. if you use something like
    ``'as "Expiration date [datetime]"'`` in your SQL, then we will parse out
    everything until the first ``'['`` for the column name and strip
-   the preceeding space: the column name would simply be "Expiration date".
+   the preceding space: the column name would simply be "Expiration date".
 
 
 .. function:: connect(database[, timeout, detect_types, isolation_level, check_same_thread, factory, cached_statements, uri])
@@ -649,7 +649,7 @@ Cursor Objects
       This is a nonstandard convenience method for executing multiple SQL statements
       at once. It issues a ``COMMIT`` statement first, then executes the SQL script it
       gets as a parameter.  This method disregards :attr:`isolation_level`; any
-      transation control must be added to *sql_script*.
+      transaction control must be added to *sql_script*.
 
       *sql_script* can be an instance of :class:`str`.
 

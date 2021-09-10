@@ -77,6 +77,18 @@ _PyPegen_check_barry_as_flufl(Parser *p, Token* t) {
     return 0;
 }
 
+int
+_PyPegen_check_legacy_stmt(Parser *p, expr_ty name) {
+    assert(name->kind == Name_kind);
+    const char* candidates[2] = {"print", "exec"};
+    for (int i=0; i<2; i++) {
+        if (PyUnicode_CompareWithASCIIString(name->v.Name.id, candidates[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 PyObject *
 _PyPegen_new_identifier(Parser *p, const char *n)
 {
@@ -1556,6 +1568,13 @@ _PyPegen_seq_last_item(asdl_seq *seq)
     Py_ssize_t len = asdl_seq_LEN(seq);
     return asdl_seq_GET_UNTYPED(seq, len - 1);
 }
+
+void *
+_PyPegen_seq_first_item(asdl_seq *seq)
+{
+    return asdl_seq_GET_UNTYPED(seq, 0);
+}
+
 
 /* Creates a new name of the form <first_name>.<second_name> */
 expr_ty

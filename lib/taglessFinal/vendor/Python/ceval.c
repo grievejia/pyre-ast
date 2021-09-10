@@ -35,7 +35,6 @@
 
 typedef struct {
     PyCodeObject *code; // The code object for the bounds. May be NULL.
-    int instr_prev;  // Only valid if code != NULL.
     PyCodeAddressRange bounds; // Only valid if code != NULL.
     CFrame cframe;
 } PyTraceInfo;
@@ -78,8 +77,8 @@ static void call_exc_trace(Py_tracefunc, PyObject *,
                            PyTraceInfo *trace_info);
 static int maybe_call_line_trace(Py_tracefunc, PyObject *,
                                  PyThreadState *, PyFrameObject *,
-                                 PyTraceInfo *);
-static void maybe_dtrace_line(PyFrameObject *, PyTraceInfo *);
+                                 PyTraceInfo *, int);
+static void maybe_dtrace_line(PyFrameObject *, PyTraceInfo *, int);
 static void dtrace_function_entry(PyFrameObject *);
 static void dtrace_function_return(PyFrameObject *);
 
@@ -1781,11 +1780,13 @@ main_loop:
         }
 
     tracing_dispatch:
+    {
+        int instr_prev = f->f_lasti;
         f->f_lasti = INSTR_OFFSET();
         NEXTOPARG();
 
         if (PyDTrace_LINE_ENABLED())
-            maybe_dtrace_line(f, &trace_info);
+            maybe_dtrace_line(f, &trace_info, instr_prev);
 
         /* line-by-line tracing support */
 
@@ -1799,7 +1800,7 @@ main_loop:
             err = maybe_call_line_trace(tstate->c_tracefunc,
                                         tstate->c_traceobj,
                                         tstate, f,
-                                        &trace_info);
+                                        &trace_info, instr_prev);
             /* Reload possibly changed frame fields */
             JUMPTO(f->f_lasti);
             stack_pointer = f->f_valuestack+f->f_stackdepth;
@@ -1810,6 +1811,7 @@ main_loop:
             }
             NEXTOPARG();
         }
+    }
 
 #ifdef LLTRACE
         /* Instruction tracing */
@@ -3757,14 +3759,17 @@ main_loop:
             if (Py_IsFalse(cond)) {
                 Py_DECREF(cond);
                 JUMPTO(oparg);
+                CHECK_EVAL_BREAKER();
                 DISPATCH();
             }
             err = PyObject_IsTrue(cond);
             Py_DECREF(cond);
             if (err > 0)
                 ;
-            else if (err == 0)
+            else if (err == 0) {
                 JUMPTO(oparg);
+                CHECK_EVAL_BREAKER();
+            }
             else
                 goto error;
             DISPATCH();
@@ -3781,12 +3786,14 @@ main_loop:
             if (Py_IsTrue(cond)) {
                 Py_DECREF(cond);
                 JUMPTO(oparg);
+                CHECK_EVAL_BREAKER();
                 DISPATCH();
             }
             err = PyObject_IsTrue(cond);
             Py_DECREF(cond);
             if (err > 0) {
                 JUMPTO(oparg);
+                CHECK_EVAL_BREAKER();
             }
             else if (err == 0)
                 ;
@@ -4502,9 +4509,6 @@ exception_unwind:
                 PUSH(val);
                 PUSH(exc);
                 JUMPTO(handler);
-                if (trace_info.cframe.use_tracing) {
-                    trace_info.instr_prev = INT_MAX;
-                }
                 /* Resume normal execution */
                 f->f_state = FRAME_EXECUTING;
                 goto main_loop;
@@ -5386,11 +5390,14 @@ static int
 prtrace(PyThreadState *tstate, PyObject *v, const char *str)
 {
     printf("%s ", str);
+    PyObject *type, *value, *traceback;
+    PyErr_Fetch(&type, &value, &traceback);
     if (PyObject_Print(v, stdout, 0) != 0) {
         /* Don't know what else to do */
         _PyErr_Clear(tstate);
     }
     printf("\n");
+    PyErr_Restore(type, value, traceback);
     return 1;
 }
 #endif
@@ -5455,7 +5462,6 @@ initialize_trace_info(PyTraceInfo *trace_info, PyFrameObject *frame)
 {
     if (trace_info->code != frame->f_code) {
         trace_info->code = frame->f_code;
-        trace_info->instr_prev = -1;
         _PyCode_InitAddressRange(frame->f_code, &trace_info->bounds);
     }
 }
@@ -5507,7 +5513,7 @@ _PyEval_CallTracing(PyObject *func, PyObject *args)
 static int
 maybe_call_line_trace(Py_tracefunc func, PyObject *obj,
                       PyThreadState *tstate, PyFrameObject *frame,
-                      PyTraceInfo *trace_info)
+                      PyTraceInfo *trace_info, int instr_prev)
 {
     int result = 0;
 
@@ -5516,13 +5522,11 @@ maybe_call_line_trace(Py_tracefunc func, PyObject *obj,
        then call the trace function if we're tracing source lines.
     */
     initialize_trace_info(trace_info, frame);
-    int lastline = trace_info->bounds.ar_line;
+    int lastline = _PyCode_CheckLineNumber(instr_prev*2, &trace_info->bounds);
     int line = _PyCode_CheckLineNumber(frame->f_lasti*2, &trace_info->bounds);
     if (line != -1 && frame->f_trace_lines) {
-        /* Trace backward edges or first instruction of a new line */
-        if (frame->f_lasti < trace_info->instr_prev ||
-            (line != lastline && frame->f_lasti*2 == trace_info->bounds.ar_start))
-        {
+        /* Trace backward edges or if line number has changed */
+        if (frame->f_lasti < instr_prev || line != lastline) {
             result = call_trace(func, obj, tstate, frame, trace_info, PyTrace_LINE, Py_None);
         }
     }
@@ -5530,7 +5534,6 @@ maybe_call_line_trace(Py_tracefunc func, PyObject *obj,
     if (frame->f_trace_opcodes) {
         result = call_trace(func, obj, tstate, frame, trace_info, PyTrace_OPCODE, Py_None);
     }
-    trace_info->instr_prev = frame->f_lasti;
     return result;
 }
 
@@ -6475,7 +6478,7 @@ dtrace_function_return(PyFrameObject *f)
 /* DTrace equivalent of maybe_call_line_trace. */
 static void
 maybe_dtrace_line(PyFrameObject *frame,
-                  PyTraceInfo *trace_info)
+                  PyTraceInfo *trace_info, int instr_prev)
 {
     const char *co_filename, *co_name;
 
@@ -6487,7 +6490,7 @@ maybe_dtrace_line(PyFrameObject *frame,
     /* If the last instruction falls at the start of a line or if
        it represents a jump backwards, update the frame's line
        number and call the trace function. */
-    if (line != frame->f_lineno || frame->f_lasti < trace_info->instr_prev) {
+    if (line != frame->f_lineno || frame->f_lasti < instr_prev) {
         if (line != -1) {
             frame->f_lineno = line;
             co_filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
@@ -6499,7 +6502,6 @@ maybe_dtrace_line(PyFrameObject *frame,
             PyDTrace_LINE(co_filename, co_name, line);
         }
     }
-    trace_info->instr_prev = frame->f_lasti;
 }
 
 

@@ -6556,7 +6556,6 @@ _PyUnicode_DecodeUnicodeEscape(const char *s,
             WRITE_CHAR(ch);
             continue;
 
-
         default:
             if (*first_invalid_escape == NULL) {
                 *first_invalid_escape = s-1; /* Back up one char, since we've

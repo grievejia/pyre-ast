@@ -1,5 +1,6 @@
 from test.support import (gc_collect, bigmemtest, _2G,
-                          cpython_only, captured_stdout)
+                          cpython_only, captured_stdout,
+                          check_disallow_instantiation)
 import locale
 import re
 import sre_compile
@@ -2176,13 +2177,11 @@ class PatternReprTests(unittest.TestCase):
                          "re.IGNORECASE|re.DOTALL|re.VERBOSE")
         self.assertEqual(repr(re.I|re.S|re.X|(1<<20)),
                          "re.IGNORECASE|re.DOTALL|re.VERBOSE|0x100000")
-        self.assertEqual(
-                repr(~re.I),
-                "re.ASCII|re.LOCALE|re.UNICODE|re.MULTILINE|re.DOTALL|re.VERBOSE|re.TEMPLATE|re.DEBUG")
+        self.assertEqual(repr(~re.I), "~re.IGNORECASE")
         self.assertEqual(repr(~(re.I|re.S|re.X)),
-                         "re.ASCII|re.LOCALE|re.UNICODE|re.MULTILINE|re.TEMPLATE|re.DEBUG")
+                         "~(re.IGNORECASE|re.DOTALL|re.VERBOSE)")
         self.assertEqual(repr(~(re.I|re.S|re.X|(1<<20))),
-                         "re.ASCII|re.LOCALE|re.UNICODE|re.MULTILINE|re.TEMPLATE|re.DEBUG|0xffe00")
+                         "~(re.IGNORECASE|re.DOTALL|re.VERBOSE|0x100000)")
 
 
 class ImplementationTest(unittest.TestCase):
@@ -2218,11 +2217,10 @@ class ImplementationTest(unittest.TestCase):
     @cpython_only
     def test_disallow_instantiation(self):
         # Ensure that the type disallows instantiation (bpo-43916)
-        self.assertRaises(TypeError, re.Match)
-        self.assertRaises(TypeError, re.Pattern)
+        check_disallow_instantiation(self, re.Match)
+        check_disallow_instantiation(self, re.Pattern)
         pat = re.compile("")
-        tp = type(pat.scanner(""))
-        self.assertRaises(TypeError, tp)
+        check_disallow_instantiation(self, type(pat.scanner("")))
 
 
 class ExternalTests(unittest.TestCase):

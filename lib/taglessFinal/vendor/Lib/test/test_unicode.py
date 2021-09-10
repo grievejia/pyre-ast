@@ -508,6 +508,28 @@ class UnicodeTest(string_tests.CommonTest,
         text = 'abc def'
         self.assertIs(text.replace(pattern, pattern), text)
 
+    def test_repeat_id_preserving(self):
+        a = '123abc1@'
+        b = '456zyx-+'
+        self.assertEqual(id(a), id(a))
+        self.assertNotEqual(id(a), id(b))
+        self.assertNotEqual(id(a), id(a * -4))
+        self.assertNotEqual(id(a), id(a * 0))
+        self.assertEqual(id(a), id(a * 1))
+        self.assertEqual(id(a), id(1 * a))
+        self.assertNotEqual(id(a), id(a * 2))
+
+        class SubStr(str):
+            pass
+
+        s = SubStr('qwerty()')
+        self.assertEqual(id(s), id(s))
+        self.assertNotEqual(id(s), id(s * -4))
+        self.assertNotEqual(id(s), id(s * 0))
+        self.assertNotEqual(id(s), id(s * 1))
+        self.assertNotEqual(id(s), id(1 * s))
+        self.assertNotEqual(id(s), id(s * 2))
+
     def test_bytes_comparison(self):
         with warnings_helper.check_warnings():
             warnings.simplefilter('ignore', BytesWarning)
@@ -1466,23 +1488,22 @@ class UnicodeTest(string_tests.CommonTest,
             PI = 3.1415926
         class Int(enum.IntEnum):
             IDES = 15
-        class Str(enum.StrEnum):
-            # StrEnum uses the value and not the name for %s etc.
+        class Str(str, enum.Enum):
             ABC = 'abc'
         # Testing Unicode formatting strings...
         self.assertEqual("%s, %s" % (Str.ABC, Str.ABC),
-                         'abc, abc')
+                         'Str.ABC, Str.ABC')
         self.assertEqual("%s, %s, %d, %i, %u, %f, %5.2f" %
                         (Str.ABC, Str.ABC,
                          Int.IDES, Int.IDES, Int.IDES,
                          Float.PI, Float.PI),
-                         'abc, abc, 15, 15, 15, 3.141593,  3.14')
+                         'Str.ABC, Str.ABC, 15, 15, 15, 3.141593,  3.14')
 
         # formatting jobs delegated from the string implementation:
         self.assertEqual('...%(foo)s...' % {'foo':Str.ABC},
-                         '...abc...')
+                         '...Str.ABC...')
         self.assertEqual('...%(foo)s...' % {'foo':Int.IDES},
-                         '...IDES...')
+                         '...Int.IDES...')
         self.assertEqual('...%(foo)i...' % {'foo':Int.IDES},
                          '...15...')
         self.assertEqual('...%(foo)d...' % {'foo':Int.IDES},
