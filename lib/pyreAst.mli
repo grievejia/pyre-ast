@@ -523,7 +523,8 @@ def foo(
 
               - Example: [{ "a", "b" }] *)
       list_comp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a list comprehension.
+          (** Represents a list comprehension. See {{:https://www.python.org/dev/peps/pep-0202/} PEP
+              202}.
 
               - Example: [\[y for x in l if len(x) > 1 for y in x if y < 4\]] *)
       set_comp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
@@ -532,24 +533,29 @@ def foo(
               - Example: [{x for x in l}] *)
       dict_comp :
         location:'location -> key:'expr -> value:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a dict comprehension.
+          (** Represents a dict comprehension. See {{:https://www.python.org/dev/peps/pep-0274/} PEP
+              274}.
 
               - Example: [{x:y for x, y in l}] *)
       generator_exp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a generator expression.
+          (** Represents a generator expression. See {{:https://www.python.org/dev/peps/pep-0289/}
+              PEP 289}.
 
               - Example: [(x for x in l)] *)
       await : location:'location -> value:'expr -> 'expr;
-          (** Represents an await expression.
+          (** Represents an await expression. See {{:https://www.python.org/dev/peps/pep-0492/} PEP
+              492}.
 
               - Example: [await foo] *)
       yield : location:'location -> value:'expr option -> 'expr;
-          (** Represents a yield expression.
+          (** Represents a yield expression. See
+              {{:https://www.python.org/dev/peps/pep-0342/#new-syntax-yield-expressions} PEP 342}.
 
               - Example: [(yield)]
               - Example: [(yield x)] *)
       yield_from : location:'location -> value:'expr -> 'expr;
-          (** Represents a yield from expression.
+          (** Represents a yield from expression. See {{:https://www.python.org/dev/peps/pep-0380/}
+              PEP 380}.
 
               - Example: [(yield from x)] *)
       compare :
@@ -834,10 +840,11 @@ def foo(
       delete : location:'location -> targets:'expr list -> 'stmt;
           (** Represent a [delete] statement.
 
-              - [targets] is the (optionally specified) values to delete. Deletion can only be one
-                of a selected few kinds of expressions, and the corresponding expression context
-                will always be set to {!field: ExpressionContext.del}. See documentation of
-                {!module: ExpressionContext} for more details of which expressions are allowed. *)
+              - [targets] is the values to delete (guaranteed by CPython parser to be non-empty).
+                Deletion can only be one of a selected few kinds of expressions, and the
+                corresponding expression context will always be set to {!field:
+                ExpressionContext.del}. See documentation of {!module: ExpressionContext} for more
+                details of which expressions are allowed. *)
       assign :
         location:'location ->
         targets:'expr list ->
@@ -846,10 +853,11 @@ def foo(
         'stmt;
           (** Represent an unannotated assignment statement.
 
-              - [targets] is the variables/attributes/subscripts to assign to. Assignment target can
-                only be one of a selected few kinds of expressions, and the corresponding expression
-                context will always be set to {!field: ExpressionContext.store}. See documentation
-                of {!module: ExpressionContext} for more details of which expressions are allowed.
+              - [targets] is the variables/attributes/subscripts to assign to (guaranteed by CPython
+                parser to be non-empty). Assignment target can only be one of a selected few kinds
+                of expressions, and the corresponding expression context will always be set to
+                {!field: ExpressionContext.store}. See documentation of {!module: ExpressionContext}
+                for more details of which expressions are allowed.
               - [value] is the value to be assigned to [targets], i.e. the "right-hand-side" of the
                 assignment.
               - [type_comment] is the Py2-style type comment annotation for [targets]. Note that if
@@ -896,7 +904,7 @@ def foo(
         'stmt;
           (** Represent a [for] statement.
 
-              - [targets] is the "index variable" of the statement. It can only be one of a selected
+              - [target] is the "index variable" of the statement. It can only be one of a selected
                 few kinds of expressions, and the corresponding expression context will always be
                 set to {!field: ExpressionContext.store}. See documentation of {!module:
                 ExpressionContext} for more details of which expressions are allowed.
