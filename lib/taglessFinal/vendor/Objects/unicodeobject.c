@@ -6556,6 +6556,7 @@ _PyUnicode_DecodeUnicodeEscape(const char *s,
             WRITE_CHAR(ch);
             continue;
 
+
         default:
             if (*first_invalid_escape == NULL) {
                 *first_invalid_escape = s-1; /* Back up one char, since we've
@@ -10984,7 +10985,7 @@ replace(PyObject *self, PyObject *str1,
             release1 = 1;
         }
         /* new_size = PyUnicode_GET_LENGTH(self) + n * (PyUnicode_GET_LENGTH(str2) -
-           PyUnicode_GET_LENGTH(str1))); */
+           PyUnicode_GET_LENGTH(str1)); */
         if (len1 < len2 && len2 - len1 > (PY_SSIZE_T_MAX - slen) / n) {
                 PyErr_SetString(PyExc_OverflowError,
                                 "replace string is too long");

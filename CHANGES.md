@@ -1,6 +1,6 @@
 ## unreleased
 
-- Bump the bundled CPython version to 3.10.0rc2
+- Bump the bundled CPython version to 3.10.0
 
 ## 0.1.3 (2021-7-22)
 
