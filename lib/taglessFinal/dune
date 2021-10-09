@@ -2,15 +2,9 @@
  vendor/Modules
  (dirs :standard _*))
 
-(env
- (release
-  (env-vars
-   (CPYTHON_CONFIGURE_OPTION --with-lto))))
-
 (rule
  (deps
-  (source_tree vendor)
-  (env_var CPYTHON_CONFIGURE_OPTION))
+  (source_tree vendor))
  (targets libpython.a pyconfig.h)
  (action
   (no-infer
@@ -21,7 +15,7 @@
       MACOSX_DEPLOYMENT_TARGET
       11.0
       (progn
-       (system "./configure $CPYTHON_CONFIGURE_OPTION")
+       (run ./configure)
        (run make libpython3.10.a))))
     (copy vendor/libpython3.10.a libpython.a)
     (copy vendor/pyconfig.h pyconfig.h)))))

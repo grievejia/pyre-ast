@@ -1,3 +1,7 @@
+## 0.1.5 (2021-10-8)
+
+- Disable LTO build of CPython in release mode. Turning on LTO turns out to be rather detrimental to link time when building downstream binaries. 
+
 ## 0.1.4 (2021-10-5)
 
 - Bump the bundled CPython version to 3.10.0
