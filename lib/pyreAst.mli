@@ -489,7 +489,8 @@ def foo(
               - Example: [a and b]
               - Example: [a or b or c] *)
       named_expr : location:'location -> target:'expr -> value:'expr -> 'expr;
-          (** Represents an assignment expression, a.k.a. the "walrus" operator. See
+          (** Represents an assignment expression, a.k.a. the "walrus" operator. [target] is
+              guaranteed by the CPython parser to always be a simple identifier. See
               {{:https://www.python.org/dev/peps/pep-0572/} PEP 572}.
 
               - Example: [(a := b)] *)
