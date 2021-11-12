@@ -22,7 +22,7 @@ let parse_module enable_type_comment filename =
     let open Base.Result in
     read_file_content filename >>= fun content ->
     parse content ~f:(fun ~context content ->
-        Parser.Concrete.parse_module ~context ~filename ~enable_type_comment content)
+        Parser.Concrete.parse_module ~context ~enable_type_comment content)
   in
   handle_result result ~f:(fun ast ->
       Format.printf "%a\n" Sexplib.Sexp.pp_hum (Concrete.Module.sexp_of_t ast))

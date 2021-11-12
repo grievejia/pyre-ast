@@ -57,9 +57,9 @@ let exception_to_result f =
   with ParsingError (message, line, column, end_line, end_column) ->
     Result.Error { ParseError.message; line; column; end_line; end_column }
 
-let parse_module ~context:_ ~spec ?(filename = "<unknown>") ?(enable_type_comment = false) input =
+let parse_module ~context:_ ~spec ?(enable_type_comment = false) input =
   let do_parse () =
-    let raw_module = cpython_parse_module filename enable_type_comment input in
+    let raw_module = cpython_parse_module "<unknown>" enable_type_comment input in
     Base.Exn.protectx ~f:(cpython_convert_module spec) raw_module ~finally:cpython_release_module
   in
   exception_to_result do_parse

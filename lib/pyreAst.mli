@@ -1771,16 +1771,12 @@ module Parser : sig
       context:Context.t ->
       spec:
         (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _) TaglessFinal.t ->
-      ?filename:string ->
       ?enable_type_comment:bool ->
       string ->
       ('module_, Error.t) Result.t
     (** [parse_module ~context ~spec input] takes the string [input] and parse it as Python module
         using tagless-final specification [spec]. See documentation of {!type: Context.t} for the
         meaning of the [context] argument.
-
-        Optionally a [filename] argument can be specified. If there is a parse error, [filename]
-        will appear in the {!field: Error.message} field.
 
         Optionally an [enable_type_comment] argument can be specified. If it is true, the parser
         will attempt to populate the [type_comment] section of each AST node that has it. Otherwise,
@@ -1872,15 +1868,11 @@ module Parser : sig
   module Concrete : sig
     val parse_module :
       context:Context.t ->
-      ?filename:string ->
       ?enable_type_comment:bool ->
       string ->
       (Concrete.Module.t, Error.t) result
     (** [parse_module ~context input] takes the string [input] and parse into a Python module. See
         documentation of {!type: Context.t} for the meaning of the [context] argument.
-
-        Optionally a [filename] argument can be specified. If there is a parse error, [filename]
-        will appear in the {!field: Error.message} field.
 
         Optionally an [enable_type_comment] argument can be specified. If it is true, the parser
         will attempt to populate the [type_comment] section of each AST node that has it. Otherwise,
