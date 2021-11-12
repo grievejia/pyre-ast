@@ -1736,8 +1736,8 @@ module Parser : sig
 
   (** This module contains a type that represents parsing errors. *)
   module Error : sig
-    type t = { message : string; line : int; column : int }
-    (** Line numbers start from 1 and column numbers start from 0. *)
+    type t = { message : string; line : int; column : int; end_line : int; end_column : int }
+    (** Line numbers start from 1 and column numbers start from 1. *)
   end
 
   val with_context : ?on_init_failure:(unit -> 'a) -> (Context.t -> 'a) -> 'a

@@ -1,3 +1,7 @@
+## unreleased
+
+- Expose 2 additional fields `end_lineno` and `end_offset` from CPython3.10 `SyntaxError`. Fix an error in documentation where column numbers should start from 1 instead of 0. 
+
 ## 0.1.5 (2021-10-8)
 
 - Disable LTO build of CPython in release mode. Turning on LTO turns out to be rather detrimental to link time when building downstream binaries. 

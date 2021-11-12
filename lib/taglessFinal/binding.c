@@ -16,7 +16,7 @@
 #include "internal/pycore_parser.h"
 
 #define DEFAULT_SYNTAX_ERROR_LINE 1
-#define DEFAULT_SYNTAX_ERROR_COLUMN 0
+#define DEFAULT_SYNTAX_ERROR_COLUMN 1
 
 static value Val_some(value v) {
   CAMLparam1(v);
@@ -100,14 +100,16 @@ static PyStatus cpython_initialize(void) {
 
 static void cpython_finalize(void) { Py_Finalize(); }
 
-static void raise_parsing_error(const char *message, long line, long column) {
+static void raise_parsing_error(const char *message, long line, long column,
+                                long end_line, long end_column) {
   CAMLparam0();
   static const value *exn = NULL;
   if (exn == NULL) {
     exn = caml_named_value("parsing_error");
   }
-  value args[3] = {caml_copy_string(message), Val_long(line), Val_long(column)};
-  caml_raise_with_args(*exn, 3, args);
+  value args[5] = {caml_copy_string(message), Val_long(line), Val_long(column),
+                   Val_long(end_line), Val_long(end_column)};
+  caml_raise_with_args(*exn, 5, args);
 }
 
 static void raise_parsing_error_from_last_python_exception() {
@@ -116,12 +118,15 @@ static void raise_parsing_error_from_last_python_exception() {
   PyErr_Fetch(&type, &value, &traceback);
   if (value == NULL) {
     raise_parsing_error("Parsing failed but location cannot be extracted",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
   const char *msg = NULL;
   long line = DEFAULT_SYNTAX_ERROR_LINE;
   long column = DEFAULT_SYNTAX_ERROR_COLUMN;
+  long end_line = DEFAULT_SYNTAX_ERROR_LINE;
+  long end_column = DEFAULT_SYNTAX_ERROR_COLUMN;
 
   PyObject *name_object = PyObject_GetAttrString(type, "__name__");
   const char *exception_name = PyUnicode_AsUTF8(name_object);
@@ -129,30 +134,39 @@ static void raise_parsing_error_from_last_python_exception() {
     // TODO: Distinguish more exceptions / provide more info on the exception.
     msg = "CPython runtime raised a non-syntax exception";
   } else {
-    // `value` is a nested tuple: (msg, (filename, lineno, offset, text)).
+    // `value` is a nested tuple:
+    //   (msg, (filename, lineno, offset, text, end_lineno, end_offset))
     // `PyTuple_GET_ITEM` returns a borrowed reference. So we don't need to
     // worry about DECREF it.
     PyObject *msg_object = PyTuple_GET_ITEM(value, 0);
     PyObject *line_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 1);
     PyObject *column_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 2);
-    if (msg_object == NULL || line_object == NULL || column_object == NULL) {
+    PyObject *end_line_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 4);
+    PyObject *end_column_object =
+        PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 5);
+    if (msg_object == NULL || line_object == NULL || column_object == NULL ||
+        end_line_object == NULL || end_column_object == NULL) {
       msg = "Parsing failed but location cannot be extracted";
     } else {
       msg = PyUnicode_AsUTF8(msg_object);
       long line_as_long = PyLong_AsLong(line_object);
       long column_as_long = PyLong_AsLong(column_object);
+      long end_line_as_long = PyLong_AsLong(end_line_object);
+      long end_column_as_long = PyLong_AsLong(end_column_object);
       if (msg == NULL || line_as_long == -1 || column_as_long == -1) {
         msg = "Parsing failed but location cannot be extracted";
       } else {
         line = line_as_long;
         column = column_as_long;
+        end_line = end_line_as_long;
+        end_column = end_column_as_long;
       }
     }
   }
 
   Py_DECREF(name_object);
   PyErr_Clear();
-  raise_parsing_error(msg, line, column);
+  raise_parsing_error(msg, line, column, end_line, end_column);
 }
 
 CAMLprim value initialize_python_runtime(void) {
@@ -2283,6 +2297,7 @@ CAMLprim value cpython_parse_module(value filename_value,
   if (filename == NULL) {
     raise_parsing_error(
         "CPython Internal error: filename PyObject conversion failed",
+        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
@@ -2290,6 +2305,7 @@ CAMLprim value cpython_parse_module(value filename_value,
   if (arena == NULL) {
     Py_DECREF(filename);
     raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
@@ -2328,6 +2344,7 @@ CAMLprim value cpython_parse_expression(value input_value) {
   PyArena *arena = _PyArena_New();
   if (arena == NULL) {
     raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
@@ -2361,6 +2378,7 @@ CAMLprim value cpython_parse_function_type(value input_value) {
   PyArena *arena = _PyArena_New();
   if (arena == NULL) {
     raise_parsing_error("CPython Internal error: Arena allocation failed",
+                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 

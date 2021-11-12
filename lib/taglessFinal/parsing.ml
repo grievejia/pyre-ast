@@ -1,6 +1,6 @@
-exception ParsingError of string * int * int
+exception ParsingError of string * int * int * int * int
 
-let _ = Callback.register_exception "parsing_error" (ParsingError ("dummy string", 0, 0))
+let _ = Callback.register_exception "parsing_error" (ParsingError ("dummy string", 0, 0, 0, 0))
 
 external initialize_python_runtime : unit -> bool = "initialize_python_runtime"
 
@@ -42,7 +42,7 @@ module Context = struct
 end
 
 module ParseError = struct
-  type t = { message : string; line : int; column : int }
+  type t = { message : string; line : int; column : int; end_line : int; end_column : int }
 end
 
 let with_context
@@ -54,7 +54,8 @@ let with_context
 
 let exception_to_result f =
   try Result.Ok (f ())
-  with ParsingError (message, line, column) -> Result.Error { ParseError.message; line; column }
+  with ParsingError (message, line, column, end_line, end_column) ->
+    Result.Error { ParseError.message; line; column; end_line; end_column }
 
 let parse_module ~context:_ ~spec ?(filename = "<unknown>") ?(enable_type_comment = false) input =
   let do_parse () =
