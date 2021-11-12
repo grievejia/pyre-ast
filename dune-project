@@ -1,6 +1,6 @@
 (lang dune 2.8)
 (name pyre-ast)
-(version 0.1.4)
+(version 0.1.6)
 (cram enable)
 
 (generate_opam_files true)
