@@ -4,6 +4,10 @@ Test parse error
   $ echo "del 1+2" | parse module -
   Parse error at line 1, column 5 to line 1, column 8: cannot delete expression
 
+Test indentation error
+  $ echo "  foo" | parse module -  # The funny end column -1 came from CPython
+  Parse error at line 1, column 2 to line 1, column -1: unexpected indent
+
 Non-ascii characters in string literals is ok
   $ echo 'x = "😝"' | parse module -
   ((body

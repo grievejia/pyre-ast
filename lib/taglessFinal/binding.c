@@ -130,7 +130,9 @@ static void raise_parsing_error_from_last_python_exception() {
 
   PyObject *name_object = PyObject_GetAttrString(type, "__name__");
   const char *exception_name = PyUnicode_AsUTF8(name_object);
-  if (exception_name == NULL || strcmp(exception_name, "SyntaxError") != 0) {
+  if (exception_name == NULL ||
+      (strcmp(exception_name, "SyntaxError") != 0 &&
+       strcmp(exception_name, "IndentationError") != 0)) {
     // TODO: Distinguish more exceptions / provide more info on the exception.
     msg = "CPython runtime raised a non-syntax exception";
   } else {

@@ -1,3 +1,7 @@
+## unreleased
+
+- `IndentationError` now gets correctly recognized as syntax error. This provides us with more precise locations info for the error.
+
 ## 0.1.6 (2021-11-12)
 
 - Expose 2 additional fields `end_lineno` and `end_offset` from CPython3.10 `SyntaxError`. Fix an error in documentation where column numbers should start from 1 instead of 0. 
