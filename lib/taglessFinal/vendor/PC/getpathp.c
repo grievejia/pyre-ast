@@ -91,7 +91,6 @@
 
 #include <windows.h>
 #include <pathcch.h>
-#include <shlwapi.h>
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -332,7 +331,7 @@ extern const char *PyWin_DLLVersionString;
    Returns NULL, or a pointer that should be freed.
 
    XXX - this code is pretty strange, as it used to also
-   work on Win16, where the buffer sizes werent available
+   work on Win16, where the buffer sizes were not available
    in advance.  It could be simplied now Win16/Win32s is dead!
 */
 static wchar_t *

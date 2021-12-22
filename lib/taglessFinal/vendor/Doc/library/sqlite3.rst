@@ -21,16 +21,17 @@ The sqlite3 module was written by Gerhard Häring.  It provides a SQL interface
 compliant with the DB-API 2.0 specification described by :pep:`249`, and
 requires SQLite 3.7.15 or newer.
 
-To use the module, you must first create a :class:`Connection` object that
+To use the module, start by creating a :class:`Connection` object that
 represents the database.  Here the data will be stored in the
 :file:`example.db` file::
 
    import sqlite3
    con = sqlite3.connect('example.db')
 
-You can also supply the special name ``:memory:`` to create a database in RAM.
+The special path name ``:memory:`` can be provided to create a temporary
+database in RAM.
 
-Once you have a :class:`Connection`, you can create a :class:`Cursor`  object
+Once a :class:`Connection` has been established, create a :class:`Cursor` object
 and call its :meth:`~Cursor.execute` method to perform SQL commands::
 
    cur = con.cursor()
@@ -49,16 +50,17 @@ and call its :meth:`~Cursor.execute` method to perform SQL commands::
    # Just be sure any changes have been committed or they will be lost.
    con.close()
 
-The data you've saved is persistent and is available in subsequent sessions::
+The saved data is persistent: it can be reloaded in a subsequent session even
+after restarting the Python interpreter::
 
    import sqlite3
    con = sqlite3.connect('example.db')
    cur = con.cursor()
 
-To retrieve data after executing a SELECT statement, you can either treat the
-cursor as an :term:`iterator`, call the cursor's :meth:`~Cursor.fetchone` method to
-retrieve a single matching row, or call :meth:`~Cursor.fetchall` to get a list of the
-matching rows.
+To retrieve data after executing a SELECT statement, either treat the cursor as
+an :term:`iterator`, call the cursor's :meth:`~Cursor.fetchone` method to
+retrieve a single matching row, or call :meth:`~Cursor.fetchall` to get a list
+of the matching rows.
 
 This example uses the iterator form::
 
@@ -73,27 +75,27 @@ This example uses the iterator form::
 
 .. _sqlite3-placeholders:
 
-Usually your SQL operations will need to use values from Python variables.  You
-shouldn't assemble your query using Python's string operations because doing so
-is insecure; it makes your program vulnerable to an SQL injection attack
-(see the `xkcd webcomic <https://xkcd.com/327/>`_ for a humorous example of
-what can go wrong)::
+SQL operations usually need to use values from Python variables. However,
+beware of using Python's string operations to assemble queries, as they
+are vulnerable to SQL injection attacks (see the `xkcd webcomic
+<https://xkcd.com/327/>`_ for a humorous example of what can go wrong)::
 
    # Never do this -- insecure!
    symbol = 'RHAT'
    cur.execute("SELECT * FROM stocks WHERE symbol = '%s'" % symbol)
 
-Instead, use the DB-API's parameter substitution. Put a placeholder wherever
-you want to use a value, and then provide a tuple of values as the second
-argument to the cursor's :meth:`~Cursor.execute` method. An SQL statement may
+Instead, use the DB-API's parameter substitution. To insert a variable into a
+query string, use a placeholder in the string, and substitute the actual values
+into the query by providing them as a :class:`tuple` of values to the second
+argument of the cursor's :meth:`~Cursor.execute` method. An SQL statement may
 use one of two kinds of placeholders: question marks (qmark style) or named
 placeholders (named style). For the qmark style, ``parameters`` must be a
 :term:`sequence <sequence>`. For the named style, it can be either a
 :term:`sequence <sequence>` or :class:`dict` instance. The length of the
 :term:`sequence <sequence>` must match the number of placeholders, or a
 :exc:`ProgrammingError` is raised. If a :class:`dict` is given, it must contain
-keys for all named parameters. Any extra items are ignored. Here's an example
-of both styles:
+keys for all named parameters. Any extra items are ignored. Here's an example of
+both styles:
 
 .. literalinclude:: ../includes/sqlite3/execute_1.py
 
@@ -117,6 +119,24 @@ Module functions and constants
 ------------------------------
 
 
+.. data:: apilevel
+
+   String constant stating the supported DB-API level. Required by the DB-API.
+   Hard-coded to ``"2.0"``.
+
+.. data:: paramstyle
+
+   String constant stating the type of parameter marker formatting expected by
+   the :mod:`sqlite3` module. Required by the DB-API. Hard-coded to
+   ``"qmark"``.
+
+   .. note::
+
+      The :mod:`sqlite3` module supports both ``qmark`` and ``numeric`` DB-API
+      parameter styles, because that is what the underlying SQLite library
+      supports. However, the DB-API does not allow multiple values for
+      the ``paramstyle`` attribute.
+
 .. data:: version
 
    The version number of this module, as a string. This is not the version of
@@ -137,6 +157,26 @@ Module functions and constants
 .. data:: sqlite_version_info
 
    The version number of the run-time SQLite library, as a tuple of integers.
+
+
+.. data:: threadsafety
+
+   Integer constant required by the DB-API, stating the level of thread safety
+   the :mod:`sqlite3` module supports. Currently hard-coded to ``1``, meaning
+   *"Threads may share the module, but not connections."* However, this may not
+   always be true. You can check the underlying SQLite library's compile-time
+   threaded mode using the following query::
+
+     import sqlite3
+     con = sqlite3.connect(":memory:")
+     con.execute("""
+         select * from pragma_compile_options
+         where compile_options like 'THREADSAFE=%'
+     """).fetchall()
+
+   Note that the `SQLITE_THREADSAFE levels
+   <https://sqlite.org/compile.html#threadsafe>`_ do not match the DB-API 2.0
+   ``threadsafety`` levels.
 
 
 .. data:: PARSE_DECLTYPES
@@ -528,8 +568,8 @@ Connection Objects
 
       Using this attribute you can control what objects are returned for the ``TEXT``
       data type. By default, this attribute is set to :class:`str` and the
-      :mod:`sqlite3` module will return Unicode objects for ``TEXT``. If you want to
-      return bytestrings instead, you can set it to :class:`bytes`.
+      :mod:`sqlite3` module will return :class:`str` objects for ``TEXT``.
+      If you want to return :class:`bytes` instead, you can set it to :class:`bytes`.
 
       You can also set it to any other callable that accepts a single bytestring
       parameter and returns the resulting object.
@@ -700,6 +740,14 @@ Cursor Objects
 
       The cursor will be unusable from this point forward; a :exc:`ProgrammingError`
       exception will be raised if any operation is attempted with the cursor.
+
+   .. method:: setinputsizes(sizes)
+
+      Required by the DB-API. Is a no-op in :mod:`sqlite3`.
+
+   .. method:: setoutputsize(size [, column])
+
+      Required by the DB-API. Is a no-op in :mod:`sqlite3`.
 
    .. attribute:: rowcount
 
@@ -1026,6 +1074,12 @@ If a timestamp stored in SQLite has a fractional part longer than 6
 numbers, its value will be truncated to microsecond precision by the
 timestamp converter.
 
+.. note::
+
+   The default "timestamp" converter ignores UTC offsets in the database and
+   always returns a naive :class:`datetime.datetime` object. To preserve UTC
+   offsets in timestamps, either leave converters disabled, or register an
+   offset-aware converter with :func:`register_converter`.
 
 .. _sqlite3-controlling-transactions:
 

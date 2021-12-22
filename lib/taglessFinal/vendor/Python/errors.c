@@ -3,6 +3,7 @@
 
 #include "Python.h"
 #include "pycore_initconfig.h"
+#include "pycore_object.h"        // _PyType_GetQualName
 #include "pycore_pyerrors.h"
 #include "pycore_pystate.h"    // _PyThreadState_GET()
 #include "pycore_sysmodule.h"
@@ -1323,46 +1324,45 @@ write_unraisable_exc_file(PyThreadState *tstate, PyObject *exc_type,
     }
 
     assert(PyExceptionClass_Check(exc_type));
-    const char *className = PyExceptionClass_Name(exc_type);
-    if (className != NULL) {
-        const char *dot = strrchr(className, '.');
-        if (dot != NULL) {
-            className = dot+1;
-        }
-    }
 
-    PyObject *moduleName = _PyObject_GetAttrId(exc_type, &PyId___module__);
-    if (moduleName == NULL || !PyUnicode_Check(moduleName)) {
-        Py_XDECREF(moduleName);
+    PyObject *modulename = _PyObject_GetAttrId(exc_type, &PyId___module__);
+    if (modulename == NULL || !PyUnicode_Check(modulename)) {
+        Py_XDECREF(modulename);
         _PyErr_Clear(tstate);
         if (PyFile_WriteString("<unknown>", file) < 0) {
             return -1;
         }
     }
     else {
-        if (!_PyUnicode_EqualToASCIIId(moduleName, &PyId_builtins)) {
-            if (PyFile_WriteObject(moduleName, file, Py_PRINT_RAW) < 0) {
-                Py_DECREF(moduleName);
+        if (!_PyUnicode_EqualToASCIIId(modulename, &PyId_builtins)) {
+            if (PyFile_WriteObject(modulename, file, Py_PRINT_RAW) < 0) {
+                Py_DECREF(modulename);
                 return -1;
             }
-            Py_DECREF(moduleName);
+            Py_DECREF(modulename);
             if (PyFile_WriteString(".", file) < 0) {
                 return -1;
             }
         }
         else {
-            Py_DECREF(moduleName);
+            Py_DECREF(modulename);
         }
     }
-    if (className == NULL) {
+
+    PyObject *qualname = _PyType_GetQualName((PyTypeObject *)exc_type);
+    if (qualname == NULL || !PyUnicode_Check(qualname)) {
+        Py_XDECREF(qualname);
+        _PyErr_Clear(tstate);
         if (PyFile_WriteString("<unknown>", file) < 0) {
             return -1;
         }
     }
     else {
-        if (PyFile_WriteString(className, file) < 0) {
+        if (PyFile_WriteObject(qualname, file, Py_PRINT_RAW) < 0) {
+            Py_DECREF(qualname);
             return -1;
         }
+        Py_DECREF(qualname);
     }
 
     if (exc_value && exc_value != Py_None) {
@@ -1724,7 +1724,7 @@ PyErr_SyntaxLocationEx(const char *filename, int lineno, int col_offset)
    functionality in tb_displayline() in traceback.c. */
 
 static PyObject *
-err_programtext(PyThreadState *tstate, FILE *fp, int lineno)
+err_programtext(PyThreadState *tstate, FILE *fp, int lineno, const char* encoding)
 {
     int i;
     char linebuf[1000];
@@ -1752,7 +1752,11 @@ after_loop:
     fclose(fp);
     if (i == lineno) {
         PyObject *res;
-        res = PyUnicode_FromString(linebuf);
+        if (encoding != NULL) {
+            res = PyUnicode_Decode(linebuf, strlen(linebuf), encoding, "replace");
+        } else {
+            res = PyUnicode_FromString(linebuf);
+        }
         if (res == NULL)
             _PyErr_Clear(tstate);
         return res;
@@ -1778,7 +1782,7 @@ PyErr_ProgramText(const char *filename, int lineno)
 }
 
 PyObject *
-PyErr_ProgramTextObject(PyObject *filename, int lineno)
+_PyErr_ProgramDecodedTextObject(PyObject *filename, int lineno, const char* encoding)
 {
     if (filename == NULL || lineno <= 0) {
         return NULL;
@@ -1790,7 +1794,13 @@ PyErr_ProgramTextObject(PyObject *filename, int lineno)
         _PyErr_Clear(tstate);
         return NULL;
     }
-    return err_programtext(tstate, fp, lineno);
+    return err_programtext(tstate, fp, lineno, encoding);
+}
+
+PyObject *
+PyErr_ProgramTextObject(PyObject *filename, int lineno)
+{
+    return _PyErr_ProgramDecodedTextObject(filename, lineno, NULL);
 }
 
 #ifdef __cplusplus

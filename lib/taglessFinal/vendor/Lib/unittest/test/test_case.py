@@ -19,7 +19,7 @@ from unittest.test.support import (
     TestEquality, TestHashing, LoggingResult, LegacyLoggingResult,
     ResultWithNoStartTestRunStopTestRun
 )
-from test.support import captured_stderr
+from test.support import captured_stderr, gc_collect
 
 
 log_foo = logging.getLogger('foo')
@@ -705,6 +705,10 @@ class Test_TestCase(unittest.TestCase, TestEquality, TestHashing):
             # this used to cause a UnicodeDecodeError constructing the failure msg
             with self.assertRaises(self.failureException):
                 self.assertDictContainsSubset({'foo': one}, {'foo': '\uFFFD'})
+
+        with self.assertWarns(DeprecationWarning) as warninfo:
+            self.assertDictContainsSubset({}, {})
+        self.assertEqual(warninfo.warnings[0].filename, __file__)
 
     def testAssertEqual(self):
         equal_pairs = [
@@ -1947,6 +1951,7 @@ test case
         for method_name in ('test1', 'test2'):
             testcase = TestCase(method_name)
             testcase.run()
+            gc_collect()  # For PyPy or other GCs.
             self.assertEqual(MyException.ninstance, 0)
 
 

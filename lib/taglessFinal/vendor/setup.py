@@ -86,6 +86,9 @@ CYGWIN = (HOST_PLATFORM == 'cygwin')
 MACOS = (HOST_PLATFORM == 'darwin')
 AIX = (HOST_PLATFORM.startswith('aix'))
 VXWORKS = ('vxworks' in HOST_PLATFORM)
+CC = os.environ.get("CC")
+if not CC:
+    CC = sysconfig.get_config_var("CC")
 
 
 SUMMARY = """
@@ -467,6 +470,9 @@ class PyBuildExt(build_ext):
 
     def build_extensions(self):
         self.set_srcdir()
+        self.set_compiler_executables()
+        self.configure_compiler()
+        self.init_inc_lib_dirs()
 
         # Detect which modules should be compiled
         self.detect_modules()
@@ -476,7 +482,6 @@ class PyBuildExt(build_ext):
 
         self.update_sources_depends()
         mods_built, mods_disabled = self.remove_configured_extensions()
-        self.set_compiler_executables()
 
         if LIST_MODULE_NAMES:
             for ext in self.extensions:
@@ -662,12 +667,11 @@ class PyBuildExt(build_ext):
     def add_multiarch_paths(self):
         # Debian/Ubuntu multiarch support.
         # https://wiki.ubuntu.com/MultiarchSpec
-        cc = sysconfig.get_config_var('CC')
         tmpfile = os.path.join(self.build_temp, 'multiarch')
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         ret = run_command(
-            '%s -print-multiarch > %s 2> /dev/null' % (cc, tmpfile))
+            '%s -print-multiarch > %s 2> /dev/null' % (CC, tmpfile))
         multiarch_path_component = ''
         try:
             if ret == 0:
@@ -729,11 +733,10 @@ class PyBuildExt(build_ext):
                 d = os.path.normpath(d)
                 add_dir_to_list(self.compiler.library_dirs, d)
 
-        cc = sysconfig.get_config_var('CC')
         tmpfile = os.path.join(self.build_temp, 'wrccpaths')
         os.makedirs(self.build_temp, exist_ok=True)
         try:
-            ret = run_command('%s --print-search-dirs >%s' % (cc, tmpfile))
+            ret = run_command('%s --print-search-dirs >%s' % (CC, tmpfile))
             if ret:
                 return
             with open(tmpfile) as fp:
@@ -751,11 +754,10 @@ class PyBuildExt(build_ext):
                 pass
 
     def add_cross_compiling_paths(self):
-        cc = sysconfig.get_config_var('CC')
         tmpfile = os.path.join(self.build_temp, 'ccpaths')
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        ret = run_command('%s -E -v - </dev/null 2>%s 1>/dev/null' % (cc, tmpfile))
+        ret = run_command('%s -E -v - </dev/null 2>%s 1>/dev/null' % (CC, tmpfile))
         is_gcc = False
         is_clang = False
         in_incdirs = False
@@ -801,6 +803,18 @@ class PyBuildExt(build_ext):
             if env_val:
                 parser = argparse.ArgumentParser()
                 parser.add_argument(arg_name, dest="dirs", action="append")
+
+                # To prevent argparse from raising an exception about any
+                # options in env_val that it mistakes for known option, we
+                # strip out all double dashes and any dashes followed by a
+                # character that is not for the option we are dealing with.
+                #
+                # Please note that order of the regex is important!  We must
+                # strip out double-dashes first so that we don't end up with
+                # substituting "--Long" to "-Long" and thus lead to "ong" being
+                # used for a library directory.
+                env_val = re.sub(r'(^|\s+)-(-|(?!%s))' % arg_name[1],
+                                 ' ', env_val)
                 options, _ = parser.parse_known_args(env_val.split())
                 if options.dirs:
                     for directory in reversed(options.dirs):
@@ -1765,7 +1779,9 @@ class PyBuildExt(build_ext):
                 ('XML_POOR_ENTROPY', '1'),
             ]
             extra_compile_args = []
-            expat_lib = []
+            # bpo-44394: libexpat uses isnan() of math.h and needs linkage
+            # against the libm
+            expat_lib = ['m']
             expat_sources = ['expat/xmlparse.c',
                              'expat/xmlrole.c',
                              'expat/xmltok.c']
@@ -1849,22 +1865,19 @@ class PyBuildExt(build_ext):
 
     def detect_uuid(self):
         # Build the _uuid module if possible
-        uuid_incs = find_file("uuid.h", self.inc_dirs, ["/usr/include/uuid"])
-        if uuid_incs is not None:
-            if self.compiler.find_library_file(self.lib_dirs, 'uuid'):
-                uuid_libs = ['uuid']
+        uuid_h = sysconfig.get_config_var("HAVE_UUID_H")
+        uuid_uuid_h = sysconfig.get_config_var("HAVE_UUID_UUID_H")
+        if uuid_h or uuid_uuid_h:
+            if sysconfig.get_config_var("HAVE_LIBUUID"):
+                uuid_libs = ["uuid"]
             else:
                 uuid_libs = []
             self.add(Extension('_uuid', ['_uuidmodule.c'],
-                               libraries=uuid_libs,
-                               include_dirs=uuid_incs))
+                               libraries=uuid_libs))
         else:
             self.missing.append('_uuid')
 
     def detect_modules(self):
-        self.configure_compiler()
-        self.init_inc_lib_dirs()
-
         self.detect_simple_extensions()
         if TEST_EXTENSIONS:
             self.detect_test_extensions()

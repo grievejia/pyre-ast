@@ -51,6 +51,9 @@ class TracebackCases(unittest.TestCase):
     def syntax_error_bad_indentation2(self):
         compile(" print(2)", "?", "exec")
 
+    def tokenizer_error_with_caret_range(self):
+        compile("blech  (  ", "?", "exec")
+
     def test_caret(self):
         err = self.get_exception_format(self.syntax_error_with_caret,
                                         SyntaxError)
@@ -80,6 +83,13 @@ class TracebackCases(unittest.TestCase):
         self.assertEqual(err[2].count('\n'), 1)   # and no additional newline
         self.assertEqual(err[1].find("y"), err[2].find("^"))  # in the right place
         self.assertEqual(err[2].count("^"), len("y for y in range(30)"))
+
+        err = self.get_exception_format(self.tokenizer_error_with_caret_range,
+                                        SyntaxError)
+        self.assertIn("^", err[2]) # third line has caret
+        self.assertEqual(err[2].count('\n'), 1)   # and no additional newline
+        self.assertEqual(err[1].find("("), err[2].find("^"))  # in the right place
+        self.assertEqual(err[2].count("^"), 1)
 
     def test_nocaret(self):
         exc = SyntaxError("error", ("x.py", 23, None, "bad syntax"))
@@ -775,6 +785,17 @@ class BaseExceptionReportingTests:
         err = self.get_report(Exception(''))
         self.assertIn('Exception\n', err)
 
+    def test_exception_modulename_not_unicode(self):
+        class X(Exception):
+            def __str__(self):
+                return "I am X"
+
+        X.__module__ = 42
+
+        err = self.get_report(X())
+        exp = f'<unknown>.{X.__qualname__}: I am X\n'
+        self.assertEqual(exp, err)
+
     def test_syntax_error_various_offsets(self):
         for offset in range(-5, 10):
             for add in [0, 2]:
@@ -793,6 +814,19 @@ class BaseExceptionReportingTests:
                 err = self.get_report(SyntaxError("msg", ("file.py", 1, offset+add, text)))
                 exp = "\n".join(expected)
                 self.assertEqual(exp, err)
+
+    def test_format_exception_only_qualname(self):
+        class A:
+            class B:
+                class X(Exception):
+                    def __str__(self):
+                        return "I am X"
+                    pass
+        err = self.get_report(A.B.X())
+        str_value = 'I am X'
+        str_name = '.'.join([A.B.X.__module__, A.B.X.__qualname__])
+        exp = "%s: %s\n" % (str_name, str_value)
+        self.assertEqual(exp, err)
 
 
 class PyExcReportingTests(BaseExceptionReportingTests, unittest.TestCase):

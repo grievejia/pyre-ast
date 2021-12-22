@@ -250,7 +250,7 @@ class EmbeddingTests(EmbeddingTestsMixin, unittest.TestCase):
 
     def test_pre_initialization_api(self):
         """
-        Checks some key parts of the C-API that need to work before the runtine
+        Checks some key parts of the C-API that need to work before the runtime
         is initialized (via Py_Initialize()).
         """
         env = dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path))
@@ -309,6 +309,14 @@ class EmbeddingTests(EmbeddingTestsMixin, unittest.TestCase):
     def test_run_main(self):
         out, err = self.run_embedded_interpreter("test_run_main")
         self.assertEqual(out.rstrip(), "Py_RunMain(): sys.argv=['-c', 'arg2']")
+        self.assertEqual(err, '')
+
+    def test_run_main_loop(self):
+        # bpo-40413: Calling Py_InitializeFromConfig()+Py_RunMain() multiple
+        # times must not crash.
+        nloop = 5
+        out, err = self.run_embedded_interpreter("test_run_main_loop")
+        self.assertEqual(out, "Py_RunMain(): sys.argv=['-c', 'arg2']\n" * nloop)
         self.assertEqual(err, '')
 
 
@@ -580,7 +588,6 @@ class InitConfigTests(EmbeddingTestsMixin, unittest.TestCase):
     def get_expected_config(self, expected_preconfig, expected,
                             expected_pathconfig, env, api,
                             modify_path_cb=None):
-        cls = self.__class__
         configs = self._get_expected_config()
 
         pre_config = configs['pre_config']
@@ -1149,7 +1156,7 @@ class InitConfigTests(EmbeddingTestsMixin, unittest.TestCase):
             'base_prefix': '',
             'exec_prefix': '',
             'base_exec_prefix': '',
-            # overriden by PyConfig
+            # overridden by PyConfig
             'program_name': 'conf_program_name',
             'base_executable': 'conf_executable',
             'executable': 'conf_executable',
@@ -1227,7 +1234,6 @@ class InitConfigTests(EmbeddingTestsMixin, unittest.TestCase):
             self.fail(f"Unable to find home in {paths!r}")
 
         prefix = exec_prefix = home
-        ver = sys.version_info
         expected_paths = self.module_search_paths(prefix=home, exec_prefix=home)
 
         config = {
@@ -1497,8 +1503,7 @@ class StdPrinterTests(EmbeddingTestsMixin, unittest.TestCase):
     #   "Set up a preliminary stderr printer until we have enough
     #    infrastructure for the io module in place."
 
-    def get_stdout_fd(self):
-        return sys.__stdout__.fileno()
+    STDOUT_FD = 1
 
     def create_printer(self, fd):
         ctypes = import_helper.import_module('ctypes')
@@ -1510,7 +1515,7 @@ class StdPrinterTests(EmbeddingTestsMixin, unittest.TestCase):
     def test_write(self):
         message = "unicode:\xe9-\u20ac-\udc80!\n"
 
-        stdout_fd = self.get_stdout_fd()
+        stdout_fd = self.STDOUT_FD
         stdout_fd_copy = os.dup(stdout_fd)
         self.addCleanup(os.close, stdout_fd_copy)
 
@@ -1531,7 +1536,7 @@ class StdPrinterTests(EmbeddingTestsMixin, unittest.TestCase):
         self.assertEqual(data, message.encode('utf8', 'backslashreplace'))
 
     def test_methods(self):
-        fd = self.get_stdout_fd()
+        fd = self.STDOUT_FD
         printer = self.create_printer(fd)
         self.assertEqual(printer.fileno(), fd)
         self.assertEqual(printer.isatty(), os.isatty(fd))
@@ -1539,7 +1544,7 @@ class StdPrinterTests(EmbeddingTestsMixin, unittest.TestCase):
         printer.close()  # noop
 
     def test_disallow_instantiation(self):
-        fd = self.get_stdout_fd()
+        fd = self.STDOUT_FD
         printer = self.create_printer(fd)
         support.check_disallow_instantiation(self, type(printer))
 

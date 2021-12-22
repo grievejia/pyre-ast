@@ -46,7 +46,7 @@ PyFrame_GetLineNumber(PyFrameObject *f)
         return f->f_lineno;
     }
     else {
-        return PyCode_Addr2Line(f->f_code, f->f_lasti*2);
+        return PyCode_Addr2Line(f->f_code, f->f_lasti*sizeof(_Py_CODEUNIT));
     }
 }
 
@@ -68,7 +68,7 @@ frame_getlasti(PyFrameObject *f, void *closure)
     if (f->f_lasti < 0) {
         return PyLong_FromLong(-1);
     }
-    return PyLong_FromLong(f->f_lasti*2);
+    return PyLong_FromLong(f->f_lasti*sizeof(_Py_CODEUNIT));
 }
 
 
@@ -275,8 +275,8 @@ marklines(PyCodeObject *code, int len)
     }
 
     while (PyLineTable_NextAddressRange(&bounds)) {
-        assert(bounds.ar_start/2 < len);
-        linestarts[bounds.ar_start/2] = bounds.ar_line;
+        assert(bounds.ar_start/(int)sizeof(_Py_CODEUNIT) < len);
+        linestarts[bounds.ar_start/sizeof(_Py_CODEUNIT)] = bounds.ar_line;
     }
     return linestarts;
 }

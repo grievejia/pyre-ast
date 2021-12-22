@@ -441,7 +441,9 @@ _PyImport_FixupExtensionObject(PyObject *mod, PyObject *name,
         return -1;
     }
 
-    if (_Py_IsMainInterpreter(tstate->interp)) {
+    // bpo-44050: Extensions and def->m_base.m_copy can be updated
+    // when the extension module doesn't support sub-interpreters.
+    if (_Py_IsMainInterpreter(tstate->interp) || def->m_size == -1) {
         if (def->m_size == -1) {
             if (def->m_base.m_copy) {
                 /* Somebody already imported the module,
@@ -2193,7 +2195,7 @@ _PyImport_BootstrapImp(PyThreadState *tstate)
     // Mock a ModuleSpec object just good enough for PyModule_FromDefAndSpec():
     // an object with just a name attribute.
     //
-    // _imp.__spec__ is overriden by importlib._bootstrap._instal() anyway.
+    // _imp.__spec__ is overridden by importlib._bootstrap._instal() anyway.
     PyObject *attrs = Py_BuildValue("{sO}", "name", name);
     if (attrs == NULL) {
         goto error;

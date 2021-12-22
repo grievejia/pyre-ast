@@ -3617,6 +3617,14 @@ PyType_FromSpec(PyType_Spec *spec)
     return PyType_FromSpecWithBases(spec, NULL);
 }
 
+/* private in 3.10 and 3.9.8+; public in 3.11 */
+PyObject *
+_PyType_GetQualName(PyTypeObject *type)
+{
+    return type_qualname(type, NULL);
+}
+
+
 void *
 PyType_GetSlot(PyTypeObject *type, int slot)
 {
@@ -4213,10 +4221,8 @@ static PyMethodDef type_methods[] = {
 };
 
 PyDoc_STRVAR(type_doc,
-/* this text signature cannot be accurate yet.  will fix.  --larry */
-"type(object_or_name, bases, dict)\n"
 "type(object) -> the object's type\n"
-"type(name, bases, dict) -> a new type");
+"type(name, bases, dict, **kwds) -> a new type");
 
 static int
 type_traverse(PyTypeObject *type, visitproc visit, void *arg)

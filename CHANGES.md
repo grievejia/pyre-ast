@@ -1,3 +1,7 @@
+## unreleased
+
+- Bump the bundled CPython version to 3.10.1
+
 ## 0.1.7 (2021-12-1)
 
 - `IndentationError` now gets correctly recognized as syntax error. This provides us with more precise locations info for the error.
