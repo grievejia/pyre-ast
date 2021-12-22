@@ -116,11 +116,20 @@ static void raise_parsing_error_from_last_python_exception() {
   CAMLparam0();
   PyObject *type, *value, *traceback;
   PyErr_Fetch(&type, &value, &traceback);
+  assert(type != NULL);
+
+  // We currently don't need the traceback info
+  if (traceback != NULL) {
+    Py_DECREF(traceback);
+  }
   if (value == NULL) {
+    Py_DECREF(type);
     raise_parsing_error("Parsing failed but location cannot be extracted",
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
+
+  // Both `type` and `value` should be non-NULL from here on.
 
   const char *msg = NULL;
   long line = DEFAULT_SYNTAX_ERROR_LINE;
@@ -167,6 +176,8 @@ static void raise_parsing_error_from_last_python_exception() {
   }
 
   Py_DECREF(name_object);
+  Py_DECREF(value);
+  Py_DECREF(type);
   PyErr_Clear();
   raise_parsing_error(msg, line, column, end_line, end_column);
 }
