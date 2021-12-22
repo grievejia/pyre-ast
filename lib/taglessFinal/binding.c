@@ -15,8 +15,8 @@
 #include "internal/pycore_ast.h"
 #include "internal/pycore_parser.h"
 
-#define DEFAULT_SYNTAX_ERROR_LINE 1
-#define DEFAULT_SYNTAX_ERROR_COLUMN 1
+#define DEFAULT_SYNTAX_ERROR_LINE -1
+#define DEFAULT_SYNTAX_ERROR_COLUMN -1
 
 static value Val_some(value v) {
   CAMLparam1(v);

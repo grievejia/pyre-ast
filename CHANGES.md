@@ -2,6 +2,7 @@
 
 - Bump the bundled CPython version to 3.10.1
 - Fixed a potential segfault issue when parsing sources with non-utf8 encoding
+- [API Breaking] The default line/column numbers for parsing errors are now set to -1, to be consistent with CPython runtime behaviors
 
 ## 0.1.7 (2021-12-1)
 

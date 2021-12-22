@@ -28,7 +28,7 @@ Non-ascii characters in string literals is ok
 
 Non-ascii characters in variable name is not ok
   $ echo 'Δx' | parse module -
-  Parse error at line 1, column 1 to line 1, column 1: CPython runtime raised a non-syntax exception
+  Parse error at line -1, column -1 to line -1, column -1: CPython runtime raised a non-syntax exception
 
 Unicode surrogate should not crash the parser
   $ echo '"\ud83d"' | parse module -

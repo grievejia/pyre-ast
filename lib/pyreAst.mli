@@ -1737,7 +1737,14 @@ module Parser : sig
   (** This module contains a type that represents parsing errors. *)
   module Error : sig
     type t = { message : string; line : int; column : int; end_line : int; end_column : int }
-    (** Line numbers start from 1 and column numbers start from 1. *)
+    (** Line numbers start from 1 and column numbers start from 1.
+
+        Note that it is possible for any of these line/column numbers to be set to -1. This can
+        happen either when CPython runtime encounters a non-syntax error, or when an unexpected
+        internal error occurs during parsing. It is also possible that CPython runtime sometimes set
+        the end locations to come before the start locations. If needed, clients are expected to
+        perform their own validations on the location numbers -- this library is only responsible of
+        forwarding whatever data that comes from the CPython side. *)
   end
 
   val with_context : ?on_init_failure:(unit -> 'a) -> (Context.t -> 'a) -> 'a
