@@ -116,22 +116,16 @@ static void raise_parsing_error_from_last_python_exception() {
   CAMLparam0();
   PyObject *type, *value, *traceback;
   PyErr_Fetch(&type, &value, &traceback);
+  PyErr_NormalizeException(&type, &value, &traceback);
   assert(type != NULL);
 
-  // We currently don't need the traceback info
-  if (traceback != NULL) {
-    Py_DECREF(traceback);
-  }
-  if (value == NULL) {
-    Py_DECREF(type);
-    raise_parsing_error("Parsing failed but location cannot be extracted",
-                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN,
-                        DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
-  }
-
-  // Both `type` and `value` should be non-NULL from here on.
-
   const char *msg = NULL;
+  PyObject *line_object = NULL;
+  PyObject *column_object = NULL;
+  PyObject *end_line_object = NULL;
+  PyObject *end_column_object = NULL;
+  PyObject *msg_object = NULL;
+
   long line = DEFAULT_SYNTAX_ERROR_LINE;
   long column = DEFAULT_SYNTAX_ERROR_COLUMN;
   long end_line = DEFAULT_SYNTAX_ERROR_LINE;
@@ -144,41 +138,74 @@ static void raise_parsing_error_from_last_python_exception() {
        strcmp(exception_name, "IndentationError") != 0)) {
     // TODO: Distinguish more exceptions / provide more info on the exception.
     msg = "CPython runtime raised a non-syntax exception";
-  } else {
-    // `value` is a nested tuple:
-    //   (msg, (filename, lineno, offset, text, end_lineno, end_offset))
-    // `PyTuple_GET_ITEM` returns a borrowed reference. So we don't need to
-    // worry about DECREF it.
-    PyObject *msg_object = PyTuple_GET_ITEM(value, 0);
-    PyObject *line_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 1);
-    PyObject *column_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 2);
-    PyObject *end_line_object = PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 4);
-    PyObject *end_column_object =
-        PyTuple_GET_ITEM(PyTuple_GET_ITEM(value, 1), 5);
-    if (msg_object == NULL || line_object == NULL || column_object == NULL ||
-        end_line_object == NULL || end_column_object == NULL) {
-      msg = "Parsing failed but location cannot be extracted";
-    } else {
-      msg = PyUnicode_AsUTF8(msg_object);
-      long line_as_long = PyLong_AsLong(line_object);
-      long column_as_long = PyLong_AsLong(column_object);
-      long end_line_as_long = PyLong_AsLong(end_line_object);
-      long end_column_as_long = PyLong_AsLong(end_column_object);
-      if (msg == NULL || line_as_long == -1 || column_as_long == -1) {
-        msg = "Parsing failed but location cannot be extracted";
-      } else {
-        line = line_as_long;
-        column = column_as_long;
-        end_line = end_line_as_long;
-        end_column = end_column_as_long;
-      }
-    }
+    goto cleanup;
   }
 
+  if (value == NULL) {
+    msg = "Parsing failed but error location cannot be extracted";
+    goto cleanup;
+  }
+  // Both `type` and `value` should be non-NULL from here on.
+
+  line_object = PyObject_GetAttrString(value, "lineno");
+  if (line_object == NULL) {
+    msg = "Parsing failed but line number cannot be extracted";
+    goto cleanup;
+  }
+  column_object = PyObject_GetAttrString(value, "offset");
+  if (column_object == NULL) {
+    msg = "Parsing failed but column number cannot be extracted";
+    goto cleanup;
+  }
+  end_line_object = PyObject_GetAttrString(value, "end_lineno");
+  if (end_line_object == NULL) {
+    msg = "Parsing failed but end line number cannot be extracted";
+    goto cleanup;
+  }
+  end_column_object = PyObject_GetAttrString(value, "end_offset");
+  if (end_column_object == NULL) {
+    msg = "Parsing failed but end column number cannot be extracted";
+    goto cleanup;
+  }
+
+  msg_object = PyObject_GetAttrString(value, "msg");
+  if (msg_object == NULL) {
+    msg = "Parsing failed but error message cannot be extracted";
+  } else {
+    msg = PyUnicode_AsUTF8(msg_object);
+  }
+
+  line = PyLong_AsLong(line_object);
+  column = PyLong_AsLong(column_object);
+  end_line = PyLong_AsLong(end_line_object);
+  end_column = PyLong_AsLong(end_column_object);
+
+cleanup:
+  if (line_object != NULL) {
+    Py_DECREF(line_object);
+  }
+  if (column_object != NULL) {
+    Py_DECREF(column_object);
+  }
+  if (end_line_object != NULL) {
+    Py_DECREF(end_line_object);
+  }
+  if (end_column_object != NULL) {
+    Py_DECREF(end_column_object);
+  }
+  if (msg_object != NULL) {
+    Py_DECREF(msg_object);
+  }
+  if (value != NULL) {
+    Py_DECREF(value);
+  }
+  if (traceback != NULL) {
+    Py_DECREF(traceback);
+  }
   Py_DECREF(name_object);
-  Py_DECREF(value);
   Py_DECREF(type);
   PyErr_Clear();
+
   raise_parsing_error(msg, line, column, end_line, end_column);
 }
 

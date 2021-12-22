@@ -1,6 +1,7 @@
 ## unreleased
 
 - Bump the bundled CPython version to 3.10.1
+- Fixed a potential segfault issue when parsing sources with non-utf8 encoding
 
 ## 0.1.7 (2021-12-1)
 
