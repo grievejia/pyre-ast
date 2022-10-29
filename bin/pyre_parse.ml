@@ -68,7 +68,6 @@ let type_comment_arg =
 
 let parse_module_cmd =
   let doc = "Parse the given input file as a Python module." in
-  let exits = Term.default_exits in
   let man =
     [
       `S Manpage.s_description;
@@ -78,12 +77,11 @@ let parse_module_cmd =
       `Blocks help_sections;
     ]
   in
-  ( Term.(const parse_module $ type_comment_arg $ filename_arg),
-    Term.info "module" ~doc ~sdocs:Manpage.s_common_options ~exits ~man )
+  let info = Cmd.info "module" ~doc ~man in
+  Cmd.v info Term.(const parse_module $ type_comment_arg $ filename_arg)
 
 let parse_expression_cmd =
   let doc = "Parse the given input file as a Python expression." in
-  let exits = Term.default_exits in
   let man =
     [
       `S Manpage.s_description;
@@ -93,12 +91,11 @@ let parse_expression_cmd =
       `Blocks help_sections;
     ]
   in
-  ( Term.(const parse_expression $ filename_arg),
-    Term.info "expression" ~doc ~sdocs:Manpage.s_common_options ~exits ~man )
+  let info = Cmd.info "expression" ~doc ~man in
+  Cmd.v info Term.(const parse_expression $ filename_arg)
 
 let parse_function_type_cmd =
   let doc = "Parse the given input file as a Python function type." in
-  let exits = Term.default_exits in
   let man =
     [
       `S Manpage.s_description;
@@ -108,15 +105,14 @@ let parse_function_type_cmd =
       `Blocks help_sections;
     ]
   in
-  ( Term.(const parse_function_type $ filename_arg),
-    Term.info "function_type" ~doc ~sdocs:Manpage.s_common_options ~exits ~man )
+  let info = Cmd.info "function_type" ~doc ~man in
+  Cmd.v info Term.(const parse_function_type $ filename_arg)
 
-let default_cmd =
+let main_cmd =
   let doc = "A Python parser based on `pyre-ast`" in
   let sdocs = Manpage.s_common_options in
-  let exits = Term.default_exits in
-  ( Term.(ret (const (`Help (`Pager, None)))),
-    Term.info "pyre-parse" ~version:"dev" ~doc ~sdocs ~exits ~man:help_sections )
+  let info = Cmd.info "pyre-parse" ~version:"dev" ~doc ~sdocs ~man:help_sections in
+  let default = Term.(ret (const (`Help (`Pager, None)))) in
+  Cmd.group info ~default [ parse_module_cmd; parse_expression_cmd; parse_function_type_cmd ]
 
-let cmds = [ parse_module_cmd; parse_expression_cmd; parse_function_type_cmd ]
-let () = Term.(exit @@ eval_choice default_cmd cmds)
+let () = Stdlib.exit (Cmd.eval main_cmd)
