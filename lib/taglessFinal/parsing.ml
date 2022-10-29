@@ -3,7 +3,6 @@ exception ParsingError of string * int * int * int * int
 let _ = Callback.register_exception "parsing_error" (ParsingError ("dummy string", 0, 0, 0, 0))
 
 external initialize_python_runtime : unit -> bool = "initialize_python_runtime"
-
 external finalize_python_runtime : unit -> unit = "finalize_python_runtime"
 
 type raw_module
@@ -37,7 +36,6 @@ module Context = struct
   type t = unit
 
   let create () = match initialize_python_runtime () with false -> None | true -> Some ()
-
   let destroy () = finalize_python_runtime ()
 end
 

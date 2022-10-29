@@ -119,5 +119,4 @@ let default_cmd =
     Term.info "pyre-parse" ~version:"dev" ~doc ~sdocs ~exits ~man:help_sections )
 
 let cmds = [ parse_module_cmd; parse_expression_cmd; parse_function_type_cmd ]
-
 let () = Term.(exit @@ eval_choice default_cmd cmds)

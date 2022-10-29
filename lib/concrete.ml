@@ -12,7 +12,6 @@ module Identifier = struct
   type t = string [@@deriving sexp, compare, hash]
 
   let make_t x () = x
-
   let to_string x = x
 end
 
@@ -31,23 +30,14 @@ module Constant = struct
   [@@deriving sexp, compare, hash]
 
   let make_none_of_t () = None
-
   let make_false_of_t () = False
-
   let make_true_of_t () = True
-
   let make_ellipsis_of_t () = Ellipsis
-
   let make_integer_of_t i = Integer i
-
   let make_big_integer_of_t i = BigInteger i
-
   let make_float_of_t f = Float f
-
   let make_complex_of_t c = Complex c
-
   let make_string_of_t s = String s
-
   let make_byte_string_of_t s = ByteString s
 end
 
@@ -55,9 +45,7 @@ module ExpressionContext = struct
   type t = Load | Store | Del [@@deriving sexp, compare, hash]
 
   let make_load_of_t () = Load
-
   let make_store_of_t () = Store
-
   let make_del_of_t () = Del
 end
 
@@ -65,7 +53,6 @@ module BooleanOperator = struct
   type t = And | Or [@@deriving sexp, compare, hash]
 
   let make_and_of_t () = And
-
   let make_or_of_t () = Or
 end
 
@@ -87,29 +74,17 @@ module BinaryOperator = struct
   [@@deriving sexp, compare, hash]
 
   let make_add_of_t () = Add
-
   let make_sub_of_t () = Sub
-
   let make_mult_of_t () = Mult
-
   let make_matmult_of_t () = MatMult
-
   let make_div_of_t () = Div
-
   let make_mod_of_t () = Mod
-
   let make_pow_of_t () = Pow
-
   let make_lshift_of_t () = LShift
-
   let make_rshift_of_t () = RShift
-
   let make_bitor_of_t () = BitOr
-
   let make_bitxor_of_t () = BitXor
-
   let make_bitand_of_t () = BitAnd
-
   let make_floordiv_of_t () = FloorDiv
 end
 
@@ -117,11 +92,8 @@ module UnaryOperator = struct
   type t = Invert | Not | UAdd | USub [@@deriving sexp, compare, hash]
 
   let make_invert_of_t () = Invert
-
   let make_not_of_t () = Not
-
   let make_uadd_of_t () = UAdd
-
   let make_usub_of_t () = USub
 end
 
@@ -130,23 +102,14 @@ module ComparisonOperator = struct
   [@@deriving sexp, compare, hash]
 
   let make_eq_of_t () = Eq
-
   let make_noteq_of_t () = NotEq
-
   let make_lt_of_t () = Lt
-
   let make_lte_of_t () = Lte
-
   let make_gt_of_t () = Gt
-
   let make_gte_of_t () = Gte
-
   let make_is_of_t () = Is
-
   let make_isnot_of_t () = IsNot
-
   let make_in_of_t () = In
-
   let make_notin_of_t () = NotIn
 end
 
@@ -690,17 +653,11 @@ module MakeTaglessFinal = struct
       ~del:(make_del_of_t ()) ()
 
   let identifier id = Identifier.make_t id ()
-
   let import_alias ~location ~name ~asname = ImportAlias.make_t ~location ~name ?asname ()
-
   let keyword ~location ~arg ~value = Keyword.make_t ~location ?arg ~value ()
-
   let location ~start ~stop = Location.make_t ~start ~stop ()
-
   let match_case ~pattern ~guard ~body = MatchCase.make_t ~pattern ?guard ~body ()
-
   let module_ ~body ~type_ignores = Module.make_t ~body ~type_ignores ()
-
   let function_type ~argtypes ~returns = FunctionType.make_t ~argtypes ~returns ()
 
   let pattern =

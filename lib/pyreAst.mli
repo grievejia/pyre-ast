@@ -114,7 +114,6 @@
       (* The intention here is to use the first parameter as a phantom type, i.e. the actual
          definition of this type is going to be [type (_, 'a) typed = 'a] *)
       type ('phantom, 'a) typed
-
       type 'v value = { intv : int -> (int, 'v) typed; boolv : bool -> (bool, 'v) typed }
 
       type ('e, 'v) expression = {
@@ -481,8 +480,7 @@ def foo(
            'location,
            'unary_op,
            'expr)
-         t =
-      private {
+         t = private {
       bool_op : location:'location -> op:'bool_op -> values:'expr list -> 'expr;
           (** Represents a boolean expression.
 
@@ -783,8 +781,7 @@ def foo(
            'match_case,
            'with_item,
            'stmt)
-         t =
-      private {
+         t = private {
       function_def :
         location:'location ->
         name:'identifier ->
@@ -1155,8 +1152,7 @@ def foo(
          'type_ignore,
          'unary_operator,
          'with_item)
-       t =
-    private {
+       t = private {
     argument : ('expression, 'identifier, 'location, 'argument) Argument.t;
     arguments : ('argument, 'expression, 'arguments) Arguments.t;
     binary_operator : 'binary_operator BinaryOperator.t;
@@ -1262,7 +1258,6 @@ module Concrete : sig
     type t [@@deriving sexp, compare, hash]
 
     val make_t : string -> unit -> t
-
     val to_string : t -> string
   end
 
@@ -1282,23 +1277,14 @@ module Concrete : sig
     [@@deriving sexp, compare, hash]
 
     val make_none_of_t : unit -> t
-
     val make_false_of_t : unit -> t
-
     val make_true_of_t : unit -> t
-
     val make_ellipsis_of_t : unit -> t
-
     val make_integer_of_t : int -> t
-
     val make_big_integer_of_t : string -> t
-
     val make_float_of_t : float -> t
-
     val make_complex_of_t : float -> t
-
     val make_string_of_t : string -> t
-
     val make_byte_string_of_t : string -> t
   end
 
@@ -1307,9 +1293,7 @@ module Concrete : sig
     type t = private Load | Store | Del [@@deriving sexp, compare, hash]
 
     val make_load_of_t : unit -> t
-
     val make_store_of_t : unit -> t
-
     val make_del_of_t : unit -> t
   end
 
@@ -1318,7 +1302,6 @@ module Concrete : sig
     type t = private And | Or [@@deriving sexp, compare, hash]
 
     val make_and_of_t : unit -> t
-
     val make_or_of_t : unit -> t
   end
 
@@ -1341,29 +1324,17 @@ module Concrete : sig
     [@@deriving sexp, compare, hash]
 
     val make_add_of_t : unit -> t
-
     val make_sub_of_t : unit -> t
-
     val make_mult_of_t : unit -> t
-
     val make_matmult_of_t : unit -> t
-
     val make_div_of_t : unit -> t
-
     val make_mod_of_t : unit -> t
-
     val make_pow_of_t : unit -> t
-
     val make_lshift_of_t : unit -> t
-
     val make_rshift_of_t : unit -> t
-
     val make_bitor_of_t : unit -> t
-
     val make_bitxor_of_t : unit -> t
-
     val make_bitand_of_t : unit -> t
-
     val make_floordiv_of_t : unit -> t
   end
 
@@ -1372,11 +1343,8 @@ module Concrete : sig
     type t = private Invert | Not | UAdd | USub [@@deriving sexp, compare, hash]
 
     val make_invert_of_t : unit -> t
-
     val make_not_of_t : unit -> t
-
     val make_uadd_of_t : unit -> t
-
     val make_usub_of_t : unit -> t
   end
 
@@ -1386,23 +1354,14 @@ module Concrete : sig
     [@@deriving sexp, compare, hash]
 
     val make_eq_of_t : unit -> t
-
     val make_noteq_of_t : unit -> t
-
     val make_lt_of_t : unit -> t
-
     val make_lte_of_t : unit -> t
-
     val make_gt_of_t : unit -> t
-
     val make_gte_of_t : unit -> t
-
     val make_is_of_t : unit -> t
-
     val make_isnot_of_t : unit -> t
-
     val make_in_of_t : unit -> t
-
     val make_notin_of_t : unit -> t
   end
 
