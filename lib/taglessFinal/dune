@@ -2,6 +2,10 @@
  vendor/Modules
  (dirs :standard _*))
 
+(subdir
+ vendor/Lib
+ (dirs :standard _*))
+
 (rule
  (deps
   (source_tree vendor))
@@ -16,8 +20,8 @@
       11.0
       (progn
        (run ./configure)
-       (run make libpython3.10.a))))
-    (copy vendor/libpython3.10.a libpython.a)
+       (run make libpython3.11.a))))
+    (copy vendor/libpython3.11.a libpython.a)
     (copy vendor/pyconfig.h pyconfig.h)))))
 
 (library

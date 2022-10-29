@@ -35,34 +35,24 @@ class FunctionTestCase(unittest.TestCase):
         # wasn't checked, and it even crashed Python.
         # Found by Greg Chapman.
 
-        try:
+        with self.assertRaises(TypeError):
             class X(object, Array):
                 _length_ = 5
                 _type_ = "i"
-        except TypeError:
-            pass
-
 
         from _ctypes import _Pointer
-        try:
+        with self.assertRaises(TypeError):
             class X(object, _Pointer):
                 pass
-        except TypeError:
-            pass
 
         from _ctypes import _SimpleCData
-        try:
+        with self.assertRaises(TypeError):
             class X(object, _SimpleCData):
                 _type_ = "i"
-        except TypeError:
-            pass
 
-        try:
+        with self.assertRaises(TypeError):
             class X(object, Structure):
                 _fields_ = []
-        except TypeError:
-            pass
-
 
     @need_symbol('c_wchar')
     def test_wchar_parm(self):
@@ -138,6 +128,7 @@ class FunctionTestCase(unittest.TestCase):
         self.assertEqual(result, -21)
         self.assertEqual(type(result), float)
 
+    @need_symbol('c_longdouble')
     def test_longdoubleresult(self):
         f = dll._testfunc_D_bhilfD
         f.argtypes = [c_byte, c_short, c_int, c_long, c_float, c_longdouble]
@@ -208,15 +199,6 @@ class FunctionTestCase(unittest.TestCase):
         # of the pointer:
         result = f(byref(c_int(99)))
         self.assertNotEqual(result.contents, 99)
-
-    def test_errors(self):
-        f = dll._testfunc_p_p
-        f.restype = c_int
-
-        class X(Structure):
-            _fields_ = [("y", c_int)]
-
-        self.assertRaises(TypeError, f, X()) #cannot convert parameter
 
     ################################################################
     def test_shorts(self):

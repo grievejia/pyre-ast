@@ -30,6 +30,7 @@ button.pack(side=BOTTOM)
 tk.mainloop()
 """
 
+import collections
 import enum
 import sys
 import types
@@ -143,8 +144,31 @@ def _splitdict(tk, v, cut_minus=True, conv=None):
         dict[key] = value
     return dict
 
+class _VersionInfoType(collections.namedtuple('_VersionInfoType',
+        ('major', 'minor', 'micro', 'releaselevel', 'serial'))):
+    def __str__(self):
+        if self.releaselevel == 'final':
+            return f'{self.major}.{self.minor}.{self.micro}'
+        else:
+            return f'{self.major}.{self.minor}{self.releaselevel[0]}{self.serial}'
 
-class EventType(str, enum.Enum):
+def _parse_version(version):
+    import re
+    m = re.fullmatch(r'(\d+)\.(\d+)([ab.])(\d+)', version)
+    major, minor, releaselevel, serial = m.groups()
+    major, minor, serial = int(major), int(minor), int(serial)
+    if releaselevel == '.':
+        micro = serial
+        serial = 0
+        releaselevel = 'final'
+    else:
+        micro = 0
+        releaselevel = {'a': 'alpha', 'b': 'beta'}[releaselevel]
+    return _VersionInfoType(major, minor, micro, releaselevel, serial)
+
+
+@enum._simple_enum(enum.StrEnum)
+class EventType:
     KeyPress = '2'
     Key = KeyPress
     KeyRelease = '3'
@@ -184,8 +208,6 @@ class EventType(str, enum.Enum):
     Activate = '36'
     Deactivate = '37'
     MouseWheel = '38'
-
-    __str__ = str.__str__
 
 
 class Event:
@@ -1055,6 +1077,11 @@ class Misc:
         self.tk.call('raise', self._w, aboveThis)
 
     lift = tkraise
+
+    def info_patchlevel(self):
+        """Returns the exact version of the Tcl library."""
+        patchlevel = self.tk.call('info', 'patchlevel')
+        return _parse_version(patchlevel)
 
     def winfo_atom(self, name, displayof=0):
         """Return integer which represents atom NAME."""
@@ -2099,7 +2126,7 @@ class Wm:
         the bitmap if None is given.
 
         Under Windows, the DEFAULT parameter can be used to set the icon
-        for the widget and any descendents that don't have an icon set
+        for the widget and any descendants that don't have an icon set
         explicitly.  DEFAULT can be the relative path to a .ico file
         (example: root.iconbitmap(default='myicon.ico') ).  See Tk
         documentation for more information."""
@@ -2345,9 +2372,9 @@ class Tk(Misc, Wm):
             _default_root = None
 
     def readprofile(self, baseName, className):
-        """Internal function. It reads BASENAME.tcl and CLASSNAME.tcl into
-        the Tcl Interpreter and calls exec on the contents of BASENAME.py and
-        CLASSNAME.py if such a file exists in the home directory."""
+        """Internal function. It reads .BASENAME.tcl and .CLASSNAME.tcl into
+        the Tcl Interpreter and calls exec on the contents of .BASENAME.py and
+        .CLASSNAME.py if such a file exists in the home directory."""
         import os
         if 'HOME' in os.environ: home = os.environ['HOME']
         else: home = os.curdir

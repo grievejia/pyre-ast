@@ -1,6 +1,8 @@
 .. currentmodule:: asyncio
 
 
+.. _asyncio-event-loop:
+
 ==========
 Event Loop
 ==========
@@ -64,7 +66,7 @@ an event loop:
 
 .. function:: new_event_loop()
 
-   Create a new event loop object.
+   Create and return a new event loop object.
 
 Note that the behaviour of :func:`get_event_loop`, :func:`set_event_loop`,
 and :func:`new_event_loop` functions can be altered by
@@ -92,7 +94,7 @@ This documentation page contains the following sections:
   loop APIs.
 
 
-.. _asyncio-event-loop:
+.. _asyncio-event-loop-methods:
 
 Event Loop Methods
 ==================
@@ -330,9 +332,9 @@ Creating Futures and Tasks
 
    .. versionadded:: 3.5.2
 
-.. method:: loop.create_task(coro, *, name=None)
+.. method:: loop.create_task(coro, *, name=None, context=None)
 
-   Schedule the execution of a :ref:`coroutine`.
+   Schedule the execution of :ref:`coroutine <coroutine>` *coro*.
    Return a :class:`Task` object.
 
    Third-party event loops can use their own subclass of :class:`Task`
@@ -342,8 +344,15 @@ Creating Futures and Tasks
    If the *name* argument is provided and not ``None``, it is set as
    the name of the task using :meth:`Task.set_name`.
 
+   An optional keyword-only *context* argument allows specifying a
+   custom :class:`contextvars.Context` for the *coro* to run in.
+   The current context copy is created when no *context* is provided.
+
    .. versionchanged:: 3.8
-      Added the ``name`` parameter.
+      Added the *name* parameter.
+
+   .. versionchanged:: 3.11
+      Added the *context* parameter.
 
 .. method:: loop.set_task_factory(factory)
 
@@ -352,7 +361,7 @@ Creating Futures and Tasks
 
    If *factory* is ``None`` the default task factory will be set.
    Otherwise, *factory* must be a *callable* with the signature matching
-   ``(loop, coro)``, where *loop* is a reference to the active
+   ``(loop, coro, context=None)``, where *loop* is a reference to the active
    event loop, and *coro* is a coroutine object.  The callable
    must return a :class:`asyncio.Future`-compatible object.
 
@@ -369,6 +378,7 @@ Opening network connections
                           family=0, proto=0, flags=0, sock=None, \
                           local_addr=None, server_hostname=None, \
                           ssl_handshake_timeout=None, \
+                          ssl_shutdown_timeout=None, \
                           happy_eyeballs_delay=None, interleave=None)
 
    Open a streaming transport connection to a given
@@ -448,6 +458,12 @@ Opening network connections
      *happy_eyeballs_delay*, *interleave*
      and *local_addr* should be specified.
 
+     .. note::
+
+        The *sock* argument transfers ownership of the socket to the
+        transport created. To close the socket, call the transport's
+        :meth:`~asyncio.BaseTransport.close` method.
+
    * *local_addr*, if given, is a ``(local_host, local_port)`` tuple used
      to bind the socket locally.  The *local_host* and *local_port*
      are looked up using ``getaddrinfo()``, similarly to *host* and *port*.
@@ -456,7 +472,24 @@ Opening network connections
      to wait for the TLS handshake to complete before aborting the connection.
      ``60.0`` seconds if ``None`` (default).
 
-   .. versionadded:: 3.8
+   * *ssl_shutdown_timeout* is the time in seconds to wait for the SSL shutdown
+     to complete before aborting the connection. ``30.0`` seconds if ``None``
+     (default).
+
+   .. versionchanged:: 3.5
+
+      Added support for SSL/TLS in :class:`ProactorEventLoop`.
+
+   .. versionchanged:: 3.6
+
+      The socket option :py:data:`~socket.TCP_NODELAY` is set by default
+      for all TCP connections.
+
+   .. versionchanged:: 3.7
+
+      Added the *ssl_handshake_timeout* parameter.
+
+   .. versionchanged:: 3.8
 
       Added the *happy_eyeballs_delay* and *interleave* parameters.
 
@@ -471,18 +504,9 @@ Opening network connections
 
       For more information: https://tools.ietf.org/html/rfc6555
 
-   .. versionadded:: 3.7
+   .. versionchanged:: 3.11
 
-      The *ssl_handshake_timeout* parameter.
-
-   .. versionchanged:: 3.6
-
-      The socket option :py:data:`~socket.TCP_NODELAY` is set by default
-      for all TCP connections.
-
-   .. versionchanged:: 3.5
-
-      Added support for SSL/TLS in :class:`ProactorEventLoop`.
+      Added the *ssl_shutdown_timeout* parameter.
 
    .. seealso::
 
@@ -493,23 +517,8 @@ Opening network connections
 .. coroutinemethod:: loop.create_datagram_endpoint(protocol_factory, \
                         local_addr=None, remote_addr=None, *, \
                         family=0, proto=0, flags=0, \
-                        reuse_address=None, reuse_port=None, \
+                        reuse_port=None, \
                         allow_broadcast=None, sock=None)
-
-   .. note::
-      The parameter *reuse_address* is no longer supported, as using
-      :py:data:`~sockets.SO_REUSEADDR` poses a significant security concern for
-      UDP. Explicitly passing ``reuse_address=True`` will raise an exception.
-
-      When multiple processes with differing UIDs assign sockets to an
-      identical UDP socket address with ``SO_REUSEADDR``, incoming packets can
-      become randomly distributed among the sockets.
-
-      For supported platforms, *reuse_port* can be used as a replacement for
-      similar functionality. With *reuse_port*,
-      :py:data:`~sockets.SO_REUSEPORT` is used instead, which specifically
-      prevents processes with differing UIDs from assigning sockets to the same
-      socket address.
 
    Create a datagram connection.
 
@@ -553,23 +562,45 @@ Opening network connections
      transport. If specified, *local_addr* and *remote_addr* should be omitted
      (must be :const:`None`).
 
+     .. note::
+
+        The *sock* argument transfers ownership of the socket to the
+        transport created. To close the socket, call the transport's
+        :meth:`~asyncio.BaseTransport.close` method.
+
    See :ref:`UDP echo client protocol <asyncio-udp-echo-client-protocol>` and
    :ref:`UDP echo server protocol <asyncio-udp-echo-server-protocol>` examples.
 
    .. versionchanged:: 3.4.4
-      The *family*, *proto*, *flags*, *reuse_address*, *reuse_port,
+      The *family*, *proto*, *flags*, *reuse_address*, *reuse_port*,
       *allow_broadcast*, and *sock* parameters were added.
 
    .. versionchanged:: 3.8.1
-      The *reuse_address* parameter is no longer supported due to security
-      concerns.
+      The *reuse_address* parameter is no longer supported, as using
+      :py:data:`~sockets.SO_REUSEADDR` poses a significant security concern for
+      UDP. Explicitly passing ``reuse_address=True`` will raise an exception.
+
+      When multiple processes with differing UIDs assign sockets to an
+      identical UDP socket address with ``SO_REUSEADDR``, incoming packets can
+      become randomly distributed among the sockets.
+
+      For supported platforms, *reuse_port* can be used as a replacement for
+      similar functionality. With *reuse_port*,
+      :py:data:`~sockets.SO_REUSEPORT` is used instead, which specifically
+      prevents processes with differing UIDs from assigning sockets to the same
+      socket address.
 
    .. versionchanged:: 3.8
       Added support for Windows.
 
+   .. versionchanged:: 3.11
+      The *reuse_address* parameter, disabled since Python 3.9.0, 3.8.1,
+      3.7.6 and 3.6.10, has been entirely removed.
+
 .. coroutinemethod:: loop.create_unix_connection(protocol_factory, \
                         path=None, *, ssl=None, sock=None, \
-                        server_hostname=None, ssl_handshake_timeout=None)
+                        server_hostname=None, ssl_handshake_timeout=None, \
+                        ssl_shutdown_timeout=None)
 
    Create a Unix connection.
 
@@ -588,13 +619,13 @@ Opening network connections
 
    .. availability:: Unix.
 
-   .. versionadded:: 3.7
-
-      The *ssl_handshake_timeout* parameter.
-
    .. versionchanged:: 3.7
-
+      Added the *ssl_handshake_timeout* parameter.
       The *path* parameter can now be a :term:`path-like object`.
+
+   .. versionchanged:: 3.11
+
+      Added the *ssl_shutdown_timeout* parameter.
 
 
 Creating network servers
@@ -606,7 +637,9 @@ Creating network servers
                         flags=socket.AI_PASSIVE, \
                         sock=None, backlog=100, ssl=None, \
                         reuse_address=None, reuse_port=None, \
-                        ssl_handshake_timeout=None, start_serving=True)
+                        ssl_handshake_timeout=None, \
+                        ssl_shutdown_timeout=None, \
+                        start_serving=True)
 
    Create a TCP server (socket type :data:`~socket.SOCK_STREAM`) listening
    on *port* of the *host* address.
@@ -646,6 +679,12 @@ Creating network servers
    * *sock* can optionally be specified in order to use a preexisting
      socket object. If specified, *host* and *port* must not be specified.
 
+     .. note::
+
+        The *sock* argument transfers ownership of the socket to the
+        server created. To close the socket, call the server's
+        :meth:`~asyncio.Server.close` method.
+
    * *backlog* is the maximum number of queued connections passed to
      :meth:`~socket.socket.listen` (defaults to 100).
 
@@ -666,20 +705,15 @@ Creating network servers
      for the TLS handshake to complete before aborting the connection.
      ``60.0`` seconds if ``None`` (default).
 
+   * *ssl_shutdown_timeout* is the time in seconds to wait for the SSL shutdown
+     to complete before aborting the connection. ``30.0`` seconds if ``None``
+     (default).
+
    * *start_serving* set to ``True`` (the default) causes the created server
      to start accepting connections immediately.  When set to ``False``,
      the user should await on :meth:`Server.start_serving` or
      :meth:`Server.serve_forever` to make the server to start accepting
      connections.
-
-   .. versionadded:: 3.7
-
-      Added *ssl_handshake_timeout* and *start_serving* parameters.
-
-   .. versionchanged:: 3.6
-
-      The socket option :py:data:`~socket.TCP_NODELAY` is set by default
-      for all TCP connections.
 
    .. versionchanged:: 3.5
 
@@ -688,6 +722,16 @@ Creating network servers
    .. versionchanged:: 3.5.1
 
       The *host* parameter can be a sequence of strings.
+
+   .. versionchanged:: 3.6
+
+      Added *ssl_handshake_timeout* and *start_serving* parameters.
+      The socket option :py:data:`~socket.TCP_NODELAY` is set by default
+      for all TCP connections.
+
+   .. versionchanged:: 3.11
+
+      Added the *ssl_shutdown_timeout* parameter.
 
    .. seealso::
 
@@ -698,7 +742,9 @@ Creating network servers
 
 .. coroutinemethod:: loop.create_unix_server(protocol_factory, path=None, \
                           *, sock=None, backlog=100, ssl=None, \
-                          ssl_handshake_timeout=None, start_serving=True)
+                          ssl_handshake_timeout=None, \
+                          ssl_shutdown_timeout=None, \
+                          start_serving=True)
 
    Similar to :meth:`loop.create_server` but works with the
    :py:data:`~socket.AF_UNIX` socket family.
@@ -713,16 +759,19 @@ Creating network servers
 
    .. availability:: Unix.
 
-   .. versionadded:: 3.7
-
-      The *ssl_handshake_timeout* and *start_serving* parameters.
-
    .. versionchanged:: 3.7
 
+      Added the *ssl_handshake_timeout* and *start_serving* parameters.
       The *path* parameter can now be a :class:`~pathlib.Path` object.
 
+   .. versionchanged:: 3.11
+
+      Added the *ssl_shutdown_timeout* parameter.
+
+
 .. coroutinemethod:: loop.connect_accepted_socket(protocol_factory, \
-                        sock, *, ssl=None, ssl_handshake_timeout=None)
+                        sock, *, ssl=None, ssl_handshake_timeout=None, \
+                        ssl_shutdown_timeout=None)
 
    Wrap an already accepted connection into a transport/protocol pair.
 
@@ -737,6 +786,12 @@ Creating network servers
    * *sock* is a preexisting socket object returned from
      :meth:`socket.accept <socket.socket.accept>`.
 
+     .. note::
+
+        The *sock* argument transfers ownership of the socket to the
+        transport created. To close the socket, call the transport's
+        :meth:`~asyncio.BaseTransport.close` method.
+
    * *ssl* can be set to an :class:`~ssl.SSLContext` to enable SSL over
      the accepted connections.
 
@@ -744,13 +799,21 @@ Creating network servers
      wait for the SSL handshake to complete before aborting the connection.
      ``60.0`` seconds if ``None`` (default).
 
+   * *ssl_shutdown_timeout* is the time in seconds to wait for the SSL shutdown
+     to complete before aborting the connection. ``30.0`` seconds if ``None``
+     (default).
+
    Returns a ``(transport, protocol)`` pair.
 
-   .. versionadded:: 3.7
-
-      The *ssl_handshake_timeout* parameter.
-
    .. versionadded:: 3.5.3
+
+   .. versionchanged:: 3.7
+
+      Added the *ssl_handshake_timeout* parameter.
+
+   .. versionchanged:: 3.11
+
+      Added the *ssl_shutdown_timeout* parameter.
 
 
 Transferring files
@@ -788,7 +851,8 @@ TLS Upgrade
 
 .. coroutinemethod:: loop.start_tls(transport, protocol, \
                         sslcontext, *, server_side=False, \
-                        server_hostname=None, ssl_handshake_timeout=None)
+                        server_hostname=None, ssl_handshake_timeout=None, \
+                        ssl_shutdown_timeout=None)
 
    Upgrade an existing transport-based connection to TLS.
 
@@ -814,7 +878,16 @@ TLS Upgrade
      wait for the TLS handshake to complete before aborting the connection.
      ``60.0`` seconds if ``None`` (default).
 
+   * *ssl_shutdown_timeout* is the time in seconds to wait for the SSL shutdown
+     to complete before aborting the connection. ``30.0`` seconds if ``None``
+     (default).
+
    .. versionadded:: 3.7
+
+   .. versionchanged:: 3.11
+
+      Added the *ssl_shutdown_timeout* parameter.
+
 
 
 Watching file descriptors
@@ -882,6 +955,29 @@ convenient.
 
    .. versionadded:: 3.7
 
+.. coroutinemethod:: loop.sock_recvfrom(sock, bufsize)
+
+   Receive a datagram of up to *bufsize* from *sock*.  Asynchronous version of
+   :meth:`socket.recvfrom() <socket.socket.recvfrom>`.
+
+   Return a tuple of (received data, remote address).
+
+   *sock* must be a non-blocking socket.
+
+   .. versionadded:: 3.11
+
+.. coroutinemethod:: loop.sock_recvfrom_into(sock, buf, nbytes=0)
+
+   Receive a datagram of up to *nbytes* from *sock* into *buf*.
+   Asynchronous version of
+   :meth:`socket.recvfrom_into() <socket.socket.recvfrom_into>`.
+
+   Return a tuple of (number of bytes received, remote address).
+
+   *sock* must be a non-blocking socket.
+
+   .. versionadded:: 3.11
+
 .. coroutinemethod:: loop.sock_sendall(sock, data)
 
    Send *data* to the *sock* socket. Asynchronous version of
@@ -897,8 +993,20 @@ convenient.
 
    .. versionchanged:: 3.7
       Even though the method was always documented as a coroutine
-      method, before Python 3.7 it returned an :class:`Future`.
+      method, before Python 3.7 it returned a :class:`Future`.
       Since Python 3.7, this is an ``async def`` method.
+
+.. coroutinemethod:: loop.sock_sendto(sock, data, address)
+
+   Send a datagram from *sock* to *address*.
+   Asynchronous version of
+   :meth:`socket.sendto() <socket.socket.sendto>`.
+
+   Return the number of bytes sent.
+
+   *sock* must be a non-blocking socket.
+
+   .. versionadded:: 3.11
 
 .. coroutinemethod:: loop.sock_connect(sock, address)
 
@@ -1124,7 +1232,13 @@ Executing code in thread or process pools
                   pool, cpu_bound)
               print('custom process pool', result)
 
-      asyncio.run(main())
+      if __name__ == '__main__':
+          asyncio.run(main())
+
+   Note that the entry point guard (``if __name__ == '__main__'``)
+   is required for option 3 due to the peculiarities of :mod:`multiprocessing`,
+   which is used by :class:`~concurrent.futures.ProcessPoolExecutor`.
+   See :ref:`Safe importing of main module <multiprocessing-safe-main-import>`.
 
    This method returns a :class:`asyncio.Future` object.
 
@@ -1141,16 +1255,12 @@ Executing code in thread or process pools
 .. method:: loop.set_default_executor(executor)
 
    Set *executor* as the default executor used by :meth:`run_in_executor`.
-   *executor* should be an instance of
+   *executor* must be an instance of
    :class:`~concurrent.futures.ThreadPoolExecutor`.
 
-   .. deprecated:: 3.8
-      Using an executor that is not an instance of
-      :class:`~concurrent.futures.ThreadPoolExecutor` is deprecated and
-      will trigger an error in Python 3.9.
-
-   *executor* must be an instance of
-   :class:`concurrent.futures.ThreadPoolExecutor`.
+   .. versionchanged:: 3.11
+      *executor* must be an instance of
+      :class:`~concurrent.futures.ThreadPoolExecutor`.
 
 
 Error Handling API
@@ -1450,7 +1560,7 @@ Do not instantiate the class directly.
       Start accepting connections.
 
       This method is idempotent, so it can be called when
-      the server is already being serving.
+      the server is already serving.
 
       The *start_serving* keyword-only parameter to
       :meth:`loop.create_server` and
@@ -1508,6 +1618,7 @@ Do not instantiate the class directly.
 
 
 .. _asyncio-event-loops:
+.. _asyncio-event-loop-implementations:
 
 Event Loop Implementations
 ==========================
@@ -1530,9 +1641,12 @@ on Unix and :class:`ProactorEventLoop` on Windows.
       import asyncio
       import selectors
 
-      selector = selectors.SelectSelector()
-      loop = asyncio.SelectorEventLoop(selector)
-      asyncio.set_event_loop(loop)
+      class MyPolicy(asyncio.DefaultEventLoopPolicy):
+         def new_event_loop(self):
+            selector = selectors.SelectSelector()
+            return asyncio.SelectorEventLoop(selector)
+
+      asyncio.set_event_loop_policy(MyPolicy())
 
 
    .. availability:: Unix, Windows.
@@ -1554,7 +1668,7 @@ on Unix and :class:`ProactorEventLoop` on Windows.
 
    Abstract base class for asyncio-compliant event loops.
 
-   The :ref:`Event Loop Methods <asyncio-event-loop>` section lists all
+   The :ref:`asyncio-event-loop-methods` section lists all
    methods that an alternative implementation of ``AbstractEventLoop``
    should have defined.
 
@@ -1585,7 +1699,7 @@ event loop::
         print('Hello World')
         loop.stop()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     # Schedule a call to hello_world()
     loop.call_soon(hello_world, loop)
@@ -1621,7 +1735,7 @@ after 5 seconds, and then stops the event loop::
         else:
             loop.stop()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     # Schedule the first call to display_date()
     end_time = loop.time() + 5.0
@@ -1653,7 +1767,7 @@ Wait until a file descriptor received some data using the
     # Create a pair of connected file descriptors
     rsock, wsock = socketpair()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     def reader():
         data = rsock.recv(100)

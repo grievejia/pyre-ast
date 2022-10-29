@@ -155,7 +155,8 @@ class UncompressedZipImportTestCase(ImportHooksBaseTestCase):
         # zlib.decompress function object, after which the problem being
         # tested here wouldn't be a problem anymore...
         # (Hence the 'A' in the test method name: to make it the first
-        # item in a list sorted by name, like unittest.makeSuite() does.)
+        # item in a list sorted by name, like
+        # unittest.TestLoader.getTestCaseNames() does.)
         #
         # This test fails on platforms on which the zlib module is
         # statically linked, but the problem it tests for can't
@@ -653,7 +654,10 @@ class UncompressedZipImportTestCase(ImportHooksBaseTestCase):
         sys.path.insert(0, TEMP_ZIP)
         mod = importlib.import_module(TESTMOD)
         self.assertEqual(mod.test(1), 1)
-        self.assertRaises(AssertionError, mod.test, False)
+        if __debug__:
+            self.assertRaises(AssertionError, mod.test, False)
+        else:
+            self.assertEqual(mod.test(0), 0)
 
     def testImport_WithStuff(self):
         # try importing from a zipfile which contains additional
@@ -709,8 +713,8 @@ class UncompressedZipImportTestCase(ImportHooksBaseTestCase):
     def doTraceback(self, module):
         try:
             module.do_raise()
-        except:
-            tb = sys.exc_info()[2].tb_next
+        except Exception as e:
+            tb = e.__traceback__.tb_next
 
             f,lno,n,line = extract_tb(tb, 1)[0]
             self.assertEqual(line, raise_src.strip())
@@ -720,7 +724,11 @@ class UncompressedZipImportTestCase(ImportHooksBaseTestCase):
 
             s = io.StringIO()
             print_tb(tb, 1, s)
-            self.assertTrue(s.getvalue().endswith(raise_src))
+            self.assertTrue(s.getvalue().endswith(
+                '    def do_raise(): raise TypeError\n'
+                '' if support.has_no_debug_ranges() else
+                '                    ^^^^^^^^^^^^^^^\n'
+            ))
         else:
             raise AssertionError("This ought to be impossible")
 
@@ -750,7 +758,8 @@ class UncompressedZipImportTestCase(ImportHooksBaseTestCase):
             z.writestr(zinfo, test_src)
 
         zipimport.zipimporter(filename)
-        zipimport.zipimporter(os.fsencode(filename))
+        with self.assertRaises(TypeError):
+            zipimport.zipimporter(os.fsencode(filename))
         with self.assertRaises(TypeError):
             zipimport.zipimporter(bytearray(os.fsencode(filename)))
         with self.assertRaises(TypeError):
@@ -799,6 +808,7 @@ class BadFileZipImportTestCase(unittest.TestCase):
         os_helper.create_empty_file(TESTMOD)
         self.assertZipFailure(TESTMOD)
 
+    @unittest.skipIf(support.is_wasi, "mode 000 not supported.")
     def testFileUnreadable(self):
         os_helper.unlink(TESTMOD)
         fd = os.open(TESTMOD, os.O_CREAT, 000)

@@ -110,7 +110,7 @@ to 1 and ``-bb`` sets :c:data:`Py_BytesWarningFlag` to 2.
    Suppress error messages when calculating the module search path in
    :c:func:`Py_GetPath`.
 
-   Private flag used by ``_freeze_importlib`` and ``frozenmain`` programs.
+   Private flag used by ``_freeze_module`` and ``frozenmain`` programs.
 
 .. c:var:: int Py_HashRandomizationFlag
 
@@ -323,6 +323,11 @@ Process-wide parameters
       single: main()
       triple: stdin; stdout; sdterr
 
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.stdio_encoding` and :c:member:`PyConfig.stdio_errors`
+   should be used instead, see :ref:`Python Initialization Configuration
+   <init-config>`.
+
    This function should be called before :c:func:`Py_Initialize`, if it is
    called at all. It specifies which encoding and error handling to use
    with standard IO, with the same meanings as in :func:`str.encode`.
@@ -345,6 +350,8 @@ Process-wide parameters
 
    .. versionadded:: 3.4
 
+   .. deprecated:: 3.11
+
 
 .. c:function:: void Py_SetProgramName(const wchar_t *name)
 
@@ -352,6 +359,10 @@ Process-wide parameters
       single: Py_Initialize()
       single: main()
       single: Py_GetPath()
+
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.program_name` should be used instead, see :ref:`Python
+   Initialization Configuration <init-config>`.
 
    This function should be called before :c:func:`Py_Initialize` is called for
    the first time, if it is called at all.  It tells the interpreter the value
@@ -365,7 +376,9 @@ Process-wide parameters
    interpreter will change the contents of this storage.
 
    Use :c:func:`Py_DecodeLocale` to decode a bytes string to get a
-   :c:type:`wchar_*` string.
+   :c:expr:`wchar_*` string.
+
+   .. deprecated:: 3.11
 
 
 .. c:function:: wchar* Py_GetProgramName()
@@ -495,6 +508,11 @@ Process-wide parameters
       single: path (in module sys)
       single: Py_GetPath()
 
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.module_search_paths` and
+   :c:member:`PyConfig.module_search_paths_set` should be used instead, see
+   :ref:`Python Initialization Configuration <init-config>`.
+
    Set the default module search path.  If this function is called before
    :c:func:`Py_Initialize`, then :c:func:`Py_GetPath` won't attempt to compute a
    default search path but uses the one provided instead.  This is useful if
@@ -509,7 +527,7 @@ Process-wide parameters
    if required after calling :c:func:`Py_Initialize`.
 
    Use :c:func:`Py_DecodeLocale` to decode a bytes string to get a
-   :c:type:`wchar_*` string.
+   :c:expr:`wchar_*` string.
 
    The path argument is copied internally, so the caller may free it after the
    call completes.
@@ -517,6 +535,8 @@ Process-wide parameters
    .. versionchanged:: 3.8
       The program full path is now used for :data:`sys.executable`, instead
       of the program name.
+
+   .. deprecated:: 3.11
 
 
 .. c:function:: const char* Py_GetVersion()
@@ -529,9 +549,11 @@ Process-wide parameters
    .. index:: single: version (in module sys)
 
    The first word (up to the first space character) is the current Python version;
-   the first three characters are the major and minor version separated by a
+   the first characters are the major and minor version separated by a
    period.  The returned string points into static storage; the caller should not
    modify its value.  The value is available to Python code as :data:`sys.version`.
+
+   See also the :c:var:`Py_Version` constant.
 
 
 .. c:function:: const char* Py_GetPlatform()
@@ -594,6 +616,11 @@ Process-wide parameters
       single: Py_FatalError()
       single: argv (in module sys)
 
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.argv`, :c:member:`PyConfig.parse_argv` and
+   :c:member:`PyConfig.safe_path` should be used instead, see :ref:`Python
+   Initialization Configuration <init-config>`.
+
    Set :data:`sys.argv` based on *argc* and *argv*.  These parameters are
    similar to those passed to the program's :c:func:`main` function with the
    difference that the first entry should refer to the script file to be
@@ -615,7 +642,10 @@ Process-wide parameters
      directory (``"."``).
 
    Use :c:func:`Py_DecodeLocale` to decode a bytes string to get a
-   :c:type:`wchar_*` string.
+   :c:expr:`wchar_*` string.
+
+   See also :c:member:`PyConfig.orig_argv` and :c:member:`PyConfig.argv`
+   members of the :ref:`Python Initialization Configuration <init-config>`.
 
    .. note::
       It is recommended that applications embedding the Python interpreter
@@ -634,20 +664,35 @@ Process-wide parameters
    .. XXX impl. doesn't seem consistent in allowing ``0``/``NULL`` for the params;
       check w/ Guido.
 
+   .. deprecated:: 3.11
+
 
 .. c:function:: void PySys_SetArgv(int argc, wchar_t **argv)
+
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.argv` and :c:member:`PyConfig.parse_argv` should be used
+   instead, see :ref:`Python Initialization Configuration <init-config>`.
 
    This function works like :c:func:`PySys_SetArgvEx` with *updatepath* set
    to ``1`` unless the :program:`python` interpreter was started with the
    :option:`-I`.
 
    Use :c:func:`Py_DecodeLocale` to decode a bytes string to get a
-   :c:type:`wchar_*` string.
+   :c:expr:`wchar_*` string.
+
+   See also :c:member:`PyConfig.orig_argv` and :c:member:`PyConfig.argv`
+   members of the :ref:`Python Initialization Configuration <init-config>`.
 
    .. versionchanged:: 3.4 The *updatepath* value depends on :option:`-I`.
 
+   .. deprecated:: 3.11
+
 
 .. c:function:: void Py_SetPythonHome(const wchar_t *home)
+
+   This API is kept for backward compatibility: setting
+   :c:member:`PyConfig.home` should be used instead, see :ref:`Python
+   Initialization Configuration <init-config>`.
 
    Set the default "home" directory, that is, the location of the standard
    Python libraries.  See :envvar:`PYTHONHOME` for the meaning of the
@@ -659,7 +704,9 @@ Process-wide parameters
    this storage.
 
    Use :c:func:`Py_DecodeLocale` to decode a bytes string to get a
-   :c:type:`wchar_*` string.
+   :c:expr:`wchar_*` string.
+
+   .. deprecated:: 3.11
 
 
 .. c:function:: w_char* Py_GetPythonHome()
@@ -800,11 +847,11 @@ from a C thread is::
    /* Release the thread. No Python API allowed beyond this point. */
    PyGILState_Release(gstate);
 
-Note that the :c:func:`PyGILState_\*` functions assume there is only one global
+Note that the ``PyGILState_*`` functions assume there is only one global
 interpreter (created automatically by :c:func:`Py_Initialize`).  Python
 supports the creation of additional interpreters (using
 :c:func:`Py_NewInterpreter`), but mixing multiple interpreters and the
-:c:func:`PyGILState_\*` API is unsupported.
+``PyGILState_*`` API is unsupported.
 
 
 .. _fork-and-threads:
@@ -867,7 +914,7 @@ code, or when embedding the Python interpreter:
 .. c:type:: PyThreadState
 
    This data structure represents the state of a single thread.  The only public
-   data member is :attr:`interp` (:c:type:`PyInterpreterState *`), which points to
+   data member is :attr:`interp` (:c:expr:`PyInterpreterState *`), which points to
    this thread's interpreter state.
 
 
@@ -1141,6 +1188,26 @@ All of the following functions must be called after :c:func:`Py_Initialize`.
    .. versionadded:: 3.9
 
 
+.. c:function:: void PyThreadState_EnterTracing(PyThreadState *tstate)
+
+   Suspend tracing and profiling in the Python thread state *tstate*.
+
+   Resume them using the :c:func:`PyThreadState_LeaveTracing` function.
+
+   .. versionadded:: 3.11
+
+
+.. c:function:: void PyThreadState_LeaveTracing(PyThreadState *tstate)
+
+   Resume tracing and profiling in the Python thread state *tstate* suspended
+   by the :c:func:`PyThreadState_EnterTracing` function.
+
+   See also :c:func:`PyEval_SetTrace` and :c:func:`PyEval_SetProfile`
+   functions.
+
+   .. versionadded:: 3.11
+
+
 .. c:function:: PyInterpreterState* PyInterpreterState_Get(void)
 
    Get the current interpreter.
@@ -1174,7 +1241,7 @@ All of the following functions must be called after :c:func:`Py_Initialize`.
 
    .. versionadded:: 3.8
 
-.. c:type:: PyObject* (*_PyFrameEvalFunction)(PyThreadState *tstate, PyFrameObject *frame, int throwflag)
+.. c:type:: PyObject* (*_PyFrameEvalFunction)(PyThreadState *tstate, _PyInterpreterFrame *frame, int throwflag)
 
    Type of a frame evaluation function.
 
@@ -1183,6 +1250,9 @@ All of the following functions must be called after :c:func:`Py_Initialize`.
 
    .. versionchanged:: 3.9
       The function now takes a *tstate* parameter.
+
+   .. versionchanged:: 3.11
+      The *frame* parameter changed from ``PyFrameObject*`` to ``_PyInterpreterFrame*``.
 
 .. c:function:: _PyFrameEvalFunction _PyInterpreterState_GetEvalFrameFunc(PyInterpreterState *interp)
 
@@ -1221,8 +1291,8 @@ All of the following functions must be called after :c:func:`Py_Initialize`.
    exception (if any) for the thread is cleared. This raises no exceptions.
 
    .. versionchanged:: 3.7
-      The type of the *id* parameter changed from :c:type:`long` to
-      :c:type:`unsigned long`.
+      The type of the *id* parameter changed from :c:expr:`long` to
+      :c:expr:`unsigned long`.
 
 .. c:function:: void PyEval_AcquireThread(PyThreadState *tstate)
 
@@ -1408,7 +1478,7 @@ operations executed by such objects may affect the wrong (sub-)interpreter's
 dictionary of loaded modules. It is equally important to avoid sharing
 objects from which the above are reachable.
 
-Also note that combining this functionality with :c:func:`PyGILState_\*` APIs
+Also note that combining this functionality with ``PyGILState_*`` APIs
 is delicate, because these APIs assume a bijection between Python thread states
 and OS-level threads, an assumption broken by the presence of sub-interpreters.
 It is highly recommended that you don't switch sub-interpreters between a pair
@@ -1591,6 +1661,8 @@ Python-level trace functions in previous versions.
    profile function is called for all monitored events except :const:`PyTrace_LINE`
    :const:`PyTrace_OPCODE` and :const:`PyTrace_EXCEPTION`.
 
+   See also the :func:`sys.setprofile` function.
+
    The caller must hold the :term:`GIL`.
 
 
@@ -1602,6 +1674,8 @@ Python-level trace functions in previous versions.
    objects being called.  Any trace function registered using :c:func:`PyEval_SetTrace`
    will not receive :const:`PyTrace_C_CALL`, :const:`PyTrace_C_EXCEPTION` or
    :const:`PyTrace_C_RETURN` as a value for the *what* parameter.
+
+   See also the :func:`sys.settrace` function.
 
    The caller must hold the :term:`GIL`.
 
@@ -1656,7 +1730,7 @@ The Python interpreter provides low-level support for thread-local storage
 (TLS) which wraps the underlying native TLS implementation to support the
 Python-level thread local storage API (:class:`threading.local`).  The
 CPython C level APIs are similar to those offered by pthreads and Windows:
-use a thread key and functions to associate a :c:type:`void*` value per
+use a thread key and functions to associate a :c:expr:`void*` value per
 thread.
 
 The GIL does *not* need to be held when calling these functions; they supply
@@ -1668,7 +1742,7 @@ you need to include :file:`pythread.h` to use thread-local storage.
 .. note::
    None of these API functions handle memory management on behalf of the
    :c:type:`void*` values.  You need to allocate and deallocate them yourself.
-   If the :c:type:`void*` values happen to be :c:type:`PyObject*`, these
+   If the :c:type:`void*` values happen to be :c:expr:`PyObject*`, these
    functions don't do refcount operations on them either.
 
 .. _thread-specific-storage-api:
@@ -1678,7 +1752,7 @@ Thread Specific Storage (TSS) API
 
 TSS API is introduced to supersede the use of the existing TLS API within the
 CPython interpreter.  This API uses a new type :c:type:`Py_tss_t` instead of
-:c:type:`int` to represent thread keys.
+:c:expr:`int` to represent thread keys.
 
 .. versionadded:: 3.7
 
@@ -1722,10 +1796,10 @@ is not possible due to its implementation being opaque at build time.
    Free the given *key* allocated by :c:func:`PyThread_tss_alloc`, after
    first calling :c:func:`PyThread_tss_delete` to ensure any associated
    thread locals have been unassigned. This is a no-op if the *key*
-   argument is `NULL`.
+   argument is ``NULL``.
 
    .. note::
-      A freed key becomes a dangling pointer, you should reset the key to
+      A freed key becomes a dangling pointer. You should reset the key to
       `NULL`.
 
 
@@ -1764,14 +1838,14 @@ undefined if the given :c:type:`Py_tss_t` has not been initialized by
 
 .. c:function:: int PyThread_tss_set(Py_tss_t *key, void *value)
 
-   Return a zero value to indicate successfully associating a :c:type:`void*`
+   Return a zero value to indicate successfully associating a :c:expr:`void*`
    value with a TSS key in the current thread.  Each thread has a distinct
-   mapping of the key to a :c:type:`void*` value.
+   mapping of the key to a :c:expr:`void*` value.
 
 
 .. c:function:: void* PyThread_tss_get(Py_tss_t *key)
 
-   Return the :c:type:`void*` value associated with a TSS key in the current
+   Return the :c:expr:`void*` value associated with a TSS key in the current
    thread.  This returns ``NULL`` if no value is associated with the key in the
    current thread.
 

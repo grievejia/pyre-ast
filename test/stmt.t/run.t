@@ -1311,6 +1311,127 @@ Test try stmt
            (args ()) (keywords ())))))))))
    (type_ignores ()))
 
+Test wildcard try
+  $ parse module wildcard_try
+  ((body
+    ((Try
+      (location ((start ((line 1) (column 0))) (stop ((line 4) (column 6)))))
+      (body
+       ((Pass
+         (location
+          ((start ((line 2) (column 2))) (stop ((line 2) (column 6))))))))
+      (handlers
+       (((location
+          ((start ((line 3) (column 0))) (stop ((line 4) (column 6)))))
+         (type_ ()) (name ())
+         (body
+          ((Pass
+            (location
+             ((start ((line 4) (column 2))) (stop ((line 4) (column 6)))))))))))
+      (orelse ()) (finalbody ()))))
+   (type_ignores ()))
+
+Test try star stmt
+  $ parse module try_star_except_finally_else
+  ((body
+    ((TryStar
+      (location ((start ((line 1) (column 0))) (stop ((line 11) (column 9)))))
+      (body
+       ((Assign
+         (location
+          ((start ((line 2) (column 4))) (stop ((line 2) (column 9)))))
+         (targets
+          ((Name
+            (location
+             ((start ((line 2) (column 4))) (stop ((line 2) (column 5)))))
+            (id x) (ctx Store))))
+         (value
+          (Name
+           (location
+            ((start ((line 2) (column 8))) (stop ((line 2) (column 9)))))
+           (id y) (ctx Load)))
+         (type_comment ()))
+        (Return
+         (location
+          ((start ((line 3) (column 4))) (stop ((line 3) (column 12)))))
+         (value
+          ((Name
+            (location
+             ((start ((line 3) (column 11))) (stop ((line 3) (column 12)))))
+            (id x) (ctx Load)))))))
+      (handlers
+       (((location
+          ((start ((line 4) (column 0))) (stop ((line 5) (column 14)))))
+         (type_
+          ((Name
+            (location
+             ((start ((line 4) (column 8))) (stop ((line 4) (column 11)))))
+            (id Foo) (ctx Load))))
+         (name (foo))
+         (body
+          ((Return
+            (location
+             ((start ((line 5) (column 4))) (stop ((line 5) (column 14)))))
+            (value
+             ((Name
+               (location
+                ((start ((line 5) (column 11))) (stop ((line 5) (column 14)))))
+               (id foo) (ctx Load))))))))
+        ((location
+          ((start ((line 6) (column 0))) (stop ((line 7) (column 15)))))
+         (type_
+          ((Name
+            (location
+             ((start ((line 6) (column 8))) (stop ((line 6) (column 11)))))
+            (id Bar) (ctx Load))))
+         (name ())
+         (body
+          ((Return
+            (location
+             ((start ((line 7) (column 4))) (stop ((line 7) (column 15)))))
+            (value
+             ((Constant
+               (location
+                ((start ((line 7) (column 11))) (stop ((line 7) (column 15)))))
+               (value None) (kind ()))))))))))
+      (orelse
+       ((Expr
+         (location
+          ((start ((line 9) (column 4))) (stop ((line 9) (column 9)))))
+         (value
+          (Call
+           (location
+            ((start ((line 9) (column 4))) (stop ((line 9) (column 9)))))
+           (func
+            (Name
+             (location
+              ((start ((line 9) (column 4))) (stop ((line 9) (column 7)))))
+             (id baz) (ctx Load)))
+           (args ()) (keywords ()))))))
+      (finalbody
+       ((Expr
+         (location
+          ((start ((line 11) (column 4))) (stop ((line 11) (column 9)))))
+         (value
+          (Call
+           (location
+            ((start ((line 11) (column 4))) (stop ((line 11) (column 9)))))
+           (func
+            (Name
+             (location
+              ((start ((line 11) (column 4))) (stop ((line 11) (column 7)))))
+             (id qux) (ctx Load)))
+           (args ()) (keywords ())))))))))
+   (type_ignores ()))
+
+Test mixing try and try star
+  $ parse module mix_try_and_try_star
+  Parse error at line 6, column 9 to line 6, column -1: cannot have both 'except' and 'except*' on the same 'try'
+
+Test wildcard try star
+  $ parse module wildcard_try_star
+  Parse error at line 3, column 8 to line 3, column 9: expected one or more exception types
+
 Test assert stmt
   $ echo "assert foo" | parse module -
   ((body

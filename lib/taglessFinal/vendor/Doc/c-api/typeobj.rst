@@ -7,8 +7,8 @@ Type Objects
 
 Perhaps one of the most important structures of the Python object system is the
 structure that defines a new type: the :c:type:`PyTypeObject` structure.  Type
-objects can be handled using any of the :c:func:`PyObject_\*` or
-:c:func:`PyType_\*` functions, but do not offer much that's interesting to most
+objects can be handled using any of the ``PyObject_*`` or
+``PyType_*`` functions, but do not offer much that's interesting to most
 Python applications. These objects are fundamental to how objects behave, so
 they are very important to the interpreter itself and to any extension module
 that implements new types.
@@ -43,13 +43,13 @@ Quick Reference
    +================================================+===================================+===================+===+===+===+===+
    | <R> :c:member:`~PyTypeObject.tp_name`          | const char *                      | __name__          | X | X |   |   |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
-   | :c:member:`~PyTypeObject.tp_basicsize`         | Py_ssize_t                        |                   | X | X |   | X |
+   | :c:member:`~PyTypeObject.tp_basicsize`         | :c:type:`Py_ssize_t`              |                   | X | X |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
-   | :c:member:`~PyTypeObject.tp_itemsize`          | Py_ssize_t                        |                   |   | X |   | X |
+   | :c:member:`~PyTypeObject.tp_itemsize`          | :c:type:`Py_ssize_t`              |                   |   | X |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
    | :c:member:`~PyTypeObject.tp_dealloc`           | :c:type:`destructor`              |                   | X | X |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
-   | :c:member:`~PyTypeObject.tp_vectorcall_offset` | Py_ssize_t                        |                   |   | X |   | X |
+   | :c:member:`~PyTypeObject.tp_vectorcall_offset` | :c:type:`Py_ssize_t`              |                   |   | X |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
    | (:c:member:`~PyTypeObject.tp_getattr`)         | :c:type:`getattrfunc`             | __getattribute__, |   |   |   | G |
    |                                                |                                   | __getattr__       |   |   |   |   |
@@ -96,7 +96,7 @@ Quick Reference
    |                                                |                                   | __gt__,           |   |   |   |   |
    |                                                |                                   | __ge__            |   |   |   |   |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
-   | :c:member:`~PyTypeObject.tp_weaklistoffset`    | Py_ssize_t                        |                   |   | X |   | ? |
+   | :c:member:`~PyTypeObject.tp_weaklistoffset`    | :c:type:`Py_ssize_t`              |                   |   | X |   | ? |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
    | :c:member:`~PyTypeObject.tp_iter`              | :c:type:`getiterfunc`             | __iter__          |   |   |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
@@ -117,7 +117,7 @@ Quick Reference
    | :c:member:`~PyTypeObject.tp_descr_set`         | :c:type:`descrsetfunc`            | __set__,          |   |   |   | X |
    |                                                |                                   | __delete__        |   |   |   |   |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
-   | :c:member:`~PyTypeObject.tp_dictoffset`        | Py_ssize_t                        |                   |   | X |   | ? |
+   | :c:member:`~PyTypeObject.tp_dictoffset`        | :c:type:`Py_ssize_t`              |                   |   | X |   | ? |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
    | :c:member:`~PyTypeObject.tp_init`              | :c:type:`initproc`                | __init__          | X | X |   | X |
    +------------------------------------------------+-----------------------------------+-------------------+---+---+---+---+
@@ -333,7 +333,7 @@ slot typedefs
 | :c:type:`allocfunc`         | .. line-block::             | :c:type:`PyObject` * |
 |                             |                             |                      |
 |                             |    :c:type:`PyTypeObject` * |                      |
-|                             |    Py_ssize_t               |                      |
+|                             |    :c:type:`Py_ssize_t`     |                      |
 +-----------------------------+-----------------------------+----------------------+
 | :c:type:`destructor`        | void *                      | void                 |
 +-----------------------------+-----------------------------+----------------------+
@@ -405,7 +405,7 @@ slot typedefs
 +-----------------------------+-----------------------------+----------------------+
 | :c:type:`iternextfunc`      | :c:type:`PyObject` *        | :c:type:`PyObject` * |
 +-----------------------------+-----------------------------+----------------------+
-| :c:type:`lenfunc`           | :c:type:`PyObject` *        | Py_ssize_t           |
+| :c:type:`lenfunc`           | :c:type:`PyObject` *        | :c:type:`Py_ssize_t` |
 +-----------------------------+-----------------------------+----------------------+
 | :c:type:`getbufferproc`     | .. line-block::             | int                  |
 |                             |                             |                      |
@@ -438,12 +438,12 @@ slot typedefs
 | :c:type:`ssizeargfunc`      | .. line-block::             | :c:type:`PyObject` * |
 |                             |                             |                      |
 |                             |    :c:type:`PyObject` *     |                      |
-|                             |    Py_ssize_t               |                      |
+|                             |    :c:type:`Py_ssize_t`     |                      |
 +-----------------------------+-----------------------------+----------------------+
 | :c:type:`ssizeobjargproc`   | .. line-block::             | int                  |
 |                             |                             |                      |
 |                             |    :c:type:`PyObject` *     |                      |
-|                             |    Py_ssize_t               |                      |
+|                             |    :c:type:`Py_ssize_t`     |                      |
 +-----------------------------+-----------------------------+----------------------+
 | :c:type:`objobjproc`        | .. line-block::             | int                  |
 |                             |                             |                      |
@@ -476,7 +476,7 @@ PyObject Slots
 --------------
 
 The type object structure extends the :c:type:`PyVarObject` structure. The
-:attr:`ob_size` field is used for dynamic types (created by  :func:`type_new`,
+:attr:`ob_size` field is used for dynamic types (created by :func:`type_new`,
 usually called from a class statement). Note that :c:data:`PyType_Type` (the
 metatype) initializes :c:member:`~PyTypeObject.tp_itemsize`, which means that its instances (i.e.
 type objects) *must* have the :attr:`ob_size` field.
@@ -529,7 +529,7 @@ type objects) *must* have the :attr:`ob_size` field.
    ``PyObject_HEAD_INIT`` macro.  For :ref:`statically allocated objects
    <static-types>`, these fields always remain ``NULL``.  For :ref:`dynamically
    allocated objects <heap-types>`, these two fields are used to link the
-   object into a doubly-linked list of *all* live objects on the heap.
+   object into a doubly linked list of *all* live objects on the heap.
 
    This could be used for various debugging purposes; currently the only uses
    are the :func:`sys.getobjects` function and to print the objects that are
@@ -722,16 +722,10 @@ and :c:type:`PyType_Type` effectively act as defaults.)
 
    .. warning::
 
-      It is not recommended for :ref:`heap types <heap-types>` to implement
+      It is not recommended for :ref:`mutable heap types <heap-types>` to implement
       the vectorcall protocol.
       When a user sets :attr:`__call__` in Python code, only *tp_call* is updated,
       likely making it inconsistent with the vectorcall function.
-
-   .. note::
-
-      The semantics of the ``tp_vectorcall_offset`` slot are provisional and
-      expected to be finalized in Python 3.9.
-      If you use vectorcall, plan for updating your code for Python 3.9.
 
    .. versionchanged:: 3.8
 
@@ -746,8 +740,9 @@ and :c:type:`PyType_Type` effectively act as defaults.)
    always inherited. If it's not, then the subclass won't use
    :ref:`vectorcall <vectorcall>`, except when
    :c:func:`PyVectorcall_Call` is explicitly called.
-   This is in particular the case for :ref:`heap types <heap-types>`
-   (including subclasses defined in Python).
+   This is in particular the case for types without the
+   :const:`Py_TPFLAGS_IMMUTABLETYPE` flag set (including subclasses defined in
+   Python).
 
 
 .. c:member:: getattrfunc PyTypeObject.tp_getattr
@@ -1136,9 +1131,9 @@ and :c:type:`PyType_Type` effectively act as defaults.)
 
       **Inheritance:**
 
-      This flag is never inherited by :ref:`heap types <heap-types>`.
-      For extension types, it is inherited whenever
-      :c:member:`~PyTypeObject.tp_descr_get` is inherited.
+      This flag is never inherited by types without the
+      :const:`Py_TPFLAGS_IMMUTABLETYPE` flag set.  For extension types, it is
+      inherited whenever :c:member:`~PyTypeObject.tp_descr_get` is inherited.
 
 
    .. XXX Document more flags here?
@@ -1183,9 +1178,9 @@ and :c:type:`PyType_Type` effectively act as defaults.)
 
       **Inheritance:**
 
-      This bit is inherited for :ref:`static subtypes <static-types>` if
+      This bit is inherited for types with the
+      :const:`Py_TPFLAGS_IMMUTABLETYPE` flag set, if
       :c:member:`~PyTypeObject.tp_call` is also inherited.
-      :ref:`Heap types <heap-types>` do not inherit ``Py_TPFLAGS_HAVE_VECTORCALL``.
 
       .. versionadded:: 3.9
 
@@ -1232,7 +1227,7 @@ and :c:type:`PyType_Type` effectively act as defaults.)
       .. note::
 
          :const:`Py_TPFLAGS_MAPPING` and :const:`Py_TPFLAGS_SEQUENCE` are
-         mutually exclusive; it is an error enable both flags simultaneously.
+         mutually exclusive; it is an error to enable both flags simultaneously.
 
       **Inheritance:**
 
@@ -1254,7 +1249,7 @@ and :c:type:`PyType_Type` effectively act as defaults.)
       .. note::
 
          :const:`Py_TPFLAGS_MAPPING` and :const:`Py_TPFLAGS_SEQUENCE` are
-         mutually exclusive; it is an error enable both flags simultaneously.
+         mutually exclusive; it is an error to enable both flags simultaneously.
 
       **Inheritance:**
 
@@ -1490,7 +1485,7 @@ and :c:type:`PyType_Type` effectively act as defaults.)
    than zero and contains the offset in the instance structure of the weak
    reference list head (ignoring the GC header, if present); this offset is used by
    :c:func:`PyObject_ClearWeakRefs` and the :c:func:`PyWeakref_\*` functions.  The
-   instance structure needs to include a field of type :c:type:`PyObject*` which is
+   instance structure needs to include a field of type :c:expr:`PyObject*` which is
    initialized to ``NULL``.
 
    Do not confuse this field with :c:member:`~PyTypeObject.tp_weaklist`; that is the list head for
@@ -1714,18 +1709,11 @@ and :c:type:`PyType_Type` effectively act as defaults.)
    :c:member:`~PyTypeObject.tp_dictoffset` should be set to ``-4`` to indicate that the dictionary is
    at the very end of the structure.
 
-   The real dictionary offset in an instance can be computed from a negative
-   :c:member:`~PyTypeObject.tp_dictoffset` as follows::
-
-      dictoffset = tp_basicsize + abs(ob_size)*tp_itemsize + tp_dictoffset
-      if dictoffset is not aligned on sizeof(void*):
-          round up to sizeof(void*)
-
-   where :c:member:`~PyTypeObject.tp_basicsize`, :c:member:`~PyTypeObject.tp_itemsize` and :c:member:`~PyTypeObject.tp_dictoffset` are
-   taken from the type object, and :attr:`ob_size` is taken from the instance.  The
-   absolute value is taken because ints use the sign of :attr:`ob_size` to
-   store the sign of the number.  (There's never a need to do this calculation
-   yourself; it is done for you by :c:func:`_PyObject_GetDictPtr`.)
+   The :c:member:`~PyTypeObject.tp_dictoffset` should be regarded as write-only.
+   To get the pointer to the dictionary call :c:func:`PyObject_GenericGetDict`.
+   Calling :c:func:`PyObject_GenericGetDict` may need to allocate memory for the
+   dictionary, so it is may be more efficient to call :c:func:`PyObject_GetAttr`
+   when accessing an attribute on the object.
 
    **Inheritance:**
 
@@ -1996,14 +1984,28 @@ and :c:type:`PyType_Type` effectively act as defaults.)
           PyErr_Restore(error_type, error_value, error_traceback);
       }
 
-   For this field to be taken into account (even through inheritance),
-   you must also set the :const:`Py_TPFLAGS_HAVE_FINALIZE` flags bit.
+   Also, note that, in a garbage collected Python,
+   :c:member:`~PyTypeObject.tp_dealloc` may be called from
+   any Python thread, not just the thread which created the object (if the object
+   becomes part of a refcount cycle, that cycle might be collected by a garbage
+   collection on any thread).  This is not a problem for Python API calls, since
+   the thread on which tp_dealloc is called will own the Global Interpreter Lock
+   (GIL). However, if the object being destroyed in turn destroys objects from some
+   other C or C++ library, care should be taken to ensure that destroying those
+   objects on the thread which called tp_dealloc will not violate any assumptions
+   of the library.
 
    **Inheritance:**
 
    This field is inherited by subtypes.
 
    .. versionadded:: 3.4
+
+   .. versionchanged:: 3.8
+
+      Before version 3.8 it was necessary to set the
+      :const:`Py_TPFLAGS_HAVE_FINALIZE` flags bit in order for this field to be
+      used.  This is no longer required.
 
    .. seealso:: "Safe object finalization" (:pep:`442`)
 
@@ -2021,17 +2023,6 @@ and :c:type:`PyType_Type` effectively act as defaults.)
    This field is never inherited.
 
    .. versionadded:: 3.9 (the field exists since 3.8 but it's only used since 3.9)
-
-
-Also, note that, in a garbage collected Python, :c:member:`~PyTypeObject.tp_dealloc` may be called from
-any Python thread, not just the thread which created the object (if the object
-becomes part of a refcount cycle, that cycle might be collected by a garbage
-collection on any thread).  This is not a problem for Python API calls, since
-the thread on which tp_dealloc is called will own the Global Interpreter Lock
-(GIL). However, if the object being destroyed in turn destroys objects from some
-other C or C++ library, care should be taken to ensure that destroying those
-objects on the thread which called tp_dealloc will not violate any assumptions
-of the library.
 
 
 .. _static-types:
@@ -2053,9 +2044,9 @@ This results in types that are limited relative to types defined in Python:
   :ref:`sub-interpreters <sub-interpreter-support>`, so they should not
   include any subinterpreter-specific state.
 
-Also, since :c:type:`PyTypeObject` is not part of the :ref:`stable ABI <stable>`,
-any extension modules using static types must be compiled for a specific
-Python minor version.
+Also, since :c:type:`PyTypeObject` is only part of the :ref:`Limited API
+<stable>` as an opaque struct, any extension modules using static types must be
+compiled for a specific Python minor version.
 
 
 .. _heap-types:
@@ -2330,13 +2321,13 @@ Buffer Object Structures
    steps:
 
    (1) Check if the request can be met. If not, raise :c:data:`PyExc_BufferError`,
-       set :c:data:`view->obj` to ``NULL`` and return ``-1``.
+       set :c:expr:`view->obj` to ``NULL`` and return ``-1``.
 
    (2) Fill in the requested fields.
 
    (3) Increment an internal counter for the number of exports.
 
-   (4) Set :c:data:`view->obj` to *exporter* and increment :c:data:`view->obj`.
+   (4) Set :c:expr:`view->obj` to *exporter* and increment :c:expr:`view->obj`.
 
    (5) Return ``0``.
 
@@ -2344,10 +2335,10 @@ Buffer Object Structures
    schemes can be used:
 
    * Re-export: Each member of the tree acts as the exporting object and
-     sets :c:data:`view->obj` to a new reference to itself.
+     sets :c:expr:`view->obj` to a new reference to itself.
 
    * Redirect: The buffer request is redirected to the root object of the
-     tree. Here, :c:data:`view->obj` will be a new reference to the root
+     tree. Here, :c:expr:`view->obj` will be a new reference to the root
      object.
 
    The individual fields of *view* are described in section
@@ -2389,7 +2380,7 @@ Buffer Object Structures
    *view* argument.
 
 
-   This function MUST NOT decrement :c:data:`view->obj`, since that is
+   This function MUST NOT decrement :c:expr:`view->obj`, since that is
    done automatically in :c:func:`PyBuffer_Release` (this scheme is
    useful for breaking reference cycles).
 
@@ -2439,7 +2430,8 @@ Async Object Structures
 
       PyObject *am_aiter(PyObject *self);
 
-   Must return an :term:`awaitable` object.  See :meth:`__anext__` for details.
+   Must return an :term:`asynchronous iterator` object.
+   See :meth:`__anext__` for details.
 
    This slot may be set to ``NULL`` if an object does not implement
    asynchronous iteration protocol.
@@ -2527,11 +2519,11 @@ Slot Type typedefs
 
 .. c:type:: PyObject *(*descrgetfunc)(PyObject *, PyObject *, PyObject *)
 
-   See :c:member:`~PyTypeObject.tp_descrget`.
+   See :c:member:`~PyTypeObject.tp_descr_get`.
 
 .. c:type:: int (*descrsetfunc)(PyObject *, PyObject *, PyObject *)
 
-   See :c:member:`~PyTypeObject.tp_descrset`.
+   See :c:member:`~PyTypeObject.tp_descr_set`.
 
 .. c:type:: Py_hash_t (*hashfunc)(PyObject *)
 
@@ -2595,7 +2587,7 @@ A basic :ref:`static type <static-types>`::
        PyVarObject_HEAD_INIT(NULL, 0)
        .tp_name = "mymod.MyObject",
        .tp_basicsize = sizeof(MyObject),
-       .tp_doc = "My objects",
+       .tp_doc = PyDoc_STR("My objects"),
        .tp_new = myobj_new,
        .tp_dealloc = (destructor)myobj_dealloc,
        .tp_repr = (reprfunc)myobj_repr,
@@ -2625,7 +2617,7 @@ with a more verbose initializer::
        0,                              /* tp_setattro */
        0,                              /* tp_as_buffer */
        0,                              /* tp_flags */
-       "My objects",                   /* tp_doc */
+       PyDoc_STR("My objects"),        /* tp_doc */
        0,                              /* tp_traverse */
        0,                              /* tp_clear */
        0,                              /* tp_richcompare */
@@ -2658,7 +2650,7 @@ A type that supports weakrefs, instance dicts, and hashing::
        PyVarObject_HEAD_INIT(NULL, 0)
        .tp_name = "mymod.MyObject",
        .tp_basicsize = sizeof(MyObject),
-       .tp_doc = "My objects",
+       .tp_doc = PyDoc_STR("My objects"),
        .tp_weaklistoffset = offsetof(MyObject, weakreflist),
        .tp_dictoffset = offsetof(MyObject, inst_dict),
        .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,
@@ -2686,7 +2678,7 @@ to create instances (e.g. uses a separate factory func) using
        .tp_name = "mymod.MyStr",
        .tp_basicsize = sizeof(MyStr),
        .tp_base = NULL,  // set to &PyUnicode_Type in module init
-       .tp_doc = "my custom str",
+       .tp_doc = PyDoc_STR("my custom str"),
        .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_DISALLOW_INSTANTIATION,
        .tp_repr = (reprfunc)myobj_repr,
    };

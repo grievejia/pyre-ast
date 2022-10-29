@@ -77,7 +77,7 @@ static value PyUnicode_to_encoded_ocaml_string(PyObject *object) {
   CAMLreturn(result);
 }
 
-_Py_static_string(Dummy_filename, "<string>");
+static const char* Dummy_filename = "<string>";
 
 static PyStatus cpython_initialize(void) {
   PyPreConfig preconfig;
@@ -351,15 +351,16 @@ CAMLprim value finalize_python_runtime(void) {
 #define STMT_MATCH(v) Field(STATEMENT(v), 14)
 #define STMT_RAISE(v) Field(STATEMENT(v), 15)
 #define STMT_TRY(v) Field(STATEMENT(v), 16)
-#define STMT_ASSERT(v) Field(STATEMENT(v), 17)
-#define STMT_IMPORT(v) Field(STATEMENT(v), 18)
-#define STMT_IMPORT_FROM(v) Field(STATEMENT(v), 19)
-#define STMT_GLOBAL(v) Field(STATEMENT(v), 20)
-#define STMT_NONLOCAL(v) Field(STATEMENT(v), 21)
-#define STMT_EXPR(v) Field(STATEMENT(v), 22)
-#define STMT_PASS(v) Field(STATEMENT(v), 23)
-#define STMT_BREAK(v) Field(STATEMENT(v), 24)
-#define STMT_CONTINUE(v) Field(STATEMENT(v), 25)
+#define STMT_TRYSTAR(v) Field(STATEMENT(v), 17)
+#define STMT_ASSERT(v) Field(STATEMENT(v), 18)
+#define STMT_IMPORT(v) Field(STATEMENT(v), 19)
+#define STMT_IMPORT_FROM(v) Field(STATEMENT(v), 20)
+#define STMT_GLOBAL(v) Field(STATEMENT(v), 21)
+#define STMT_NONLOCAL(v) Field(STATEMENT(v), 22)
+#define STMT_EXPR(v) Field(STATEMENT(v), 23)
+#define STMT_PASS(v) Field(STATEMENT(v), 24)
+#define STMT_BREAK(v) Field(STATEMENT(v), 25)
+#define STMT_CONTINUE(v) Field(STATEMENT(v), 26)
 
 // Forward delcarations
 CAMLprim value visit_expr(value visitor_value, expr_ty expr);
@@ -1965,6 +1966,26 @@ CAMLprim value visit_try_stmt(value visitor_value, stmt_ty stmt) {
   CAMLreturn(result);
 }
 
+CAMLprim value visit_try_star_stmt(value visitor_value, stmt_ty stmt) {
+  CAMLparam1(visitor_value);
+  CAMLlocal5(location_value, body_value, handlers_value, orelse_value,
+             finalbody_value);
+  CAMLlocal1(result);
+
+  location_value = visit_location(visitor_value, stmt->lineno, stmt->col_offset,
+                                  stmt->end_lineno, stmt->end_col_offset);
+  body_value = visit_stmts(visitor_value, stmt->v.Try.body);
+  handlers_value = visit_except_handlers(visitor_value, stmt->v.Try.handlers);
+  orelse_value = visit_stmts(visitor_value, stmt->v.Try.orelse);
+  finalbody_value = visit_stmts(visitor_value, stmt->v.Try.finalbody);
+
+  value args[5] = {location_value, body_value, handlers_value, orelse_value,
+                   finalbody_value};
+  result = caml_callbackN(STMT_TRYSTAR(visitor_value), 5, args);
+
+  CAMLreturn(result);
+}
+
 CAMLprim value visit_assert_stmt(value visitor_value, stmt_ty stmt) {
   CAMLparam1(visitor_value);
   CAMLlocal4(location_value, test_value, msg_value, result);
@@ -2181,6 +2202,9 @@ CAMLprim value visit_stmt(value visitor_value, stmt_ty stmt) {
   case Try_kind:
     result = visit_try_stmt(visitor_value, stmt);
     break;
+  case TryStar_kind:
+    result = visit_try_star_stmt(visitor_value, stmt);
+    break;
   case Assert_kind:
     result = visit_assert_stmt(visitor_value, stmt);
     break;
@@ -2388,9 +2412,12 @@ CAMLprim value cpython_parse_expression(value input_value) {
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
+  PyObject *filename = PyUnicode_FromString(Dummy_filename);
   mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
-                                       _PyUnicode_FromId(&Dummy_filename),
+                                       filename,
                                        Py_eval_input, NULL, arena);
+  Py_DECREF(filename);
+
   if (ast == NULL) {
     _PyArena_Free(arena);
     raise_parsing_error_from_last_python_exception();
@@ -2422,9 +2449,12 @@ CAMLprim value cpython_parse_function_type(value input_value) {
                         DEFAULT_SYNTAX_ERROR_LINE, DEFAULT_SYNTAX_ERROR_COLUMN);
   }
 
+  PyObject *filename = PyUnicode_FromString(Dummy_filename);
   mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
-                                       _PyUnicode_FromId(&Dummy_filename),
+                                       filename,
                                        Py_func_type_input, NULL, arena);
+  Py_DECREF(filename);
+
   if (ast == NULL) {
     _PyArena_Free(arena);
     raise_parsing_error_from_last_python_exception();

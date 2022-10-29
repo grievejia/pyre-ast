@@ -86,8 +86,8 @@ Bookkeeping functions
    .. versionchanged:: 3.2
       Moved to the version 2 scheme which uses all of the bits in a string seed.
 
-   .. deprecated:: 3.9
-      In the future, the *seed* must be one of the following types:
+   .. versionchanged:: 3.11
+      The *seed* must be one of the following types:
       *NoneType*, :class:`int`, :class:`float`, :class:`str`,
       :class:`bytes`, or :class:`bytearray`.
 
@@ -208,12 +208,9 @@ Functions for sequences
       Raises a :exc:`ValueError` if all weights are zero.
 
 
-.. function:: shuffle(x[, random])
+.. function:: shuffle(x)
 
    Shuffle the sequence *x* in place.
-
-   The optional argument *random* is a 0-argument function returning a random
-   float in [0.0, 1.0); by default, this is the function :func:`.random`.
 
    To shuffle an immutable sequence and return a new shuffled list, use
    ``sample(x, k=len(x))`` instead.
@@ -230,8 +227,8 @@ Functions for sequences
 
 .. function:: sample(population, k, *, counts=None)
 
-   Return a *k* length list of unique elements chosen from the population sequence
-   or set. Used for random sampling without replacement.
+   Return a *k* length list of unique elements chosen from the population
+   sequence.  Used for random sampling without replacement.
 
    Returns a new list containing elements from the population while leaving the
    original population unchanged.  The resulting list is in selection order so that
@@ -257,11 +254,10 @@ Functions for sequences
    .. versionchanged:: 3.9
       Added the *counts* parameter.
 
-   .. deprecated:: 3.9
-      In the future, the *population* must be a sequence.  Instances of
-      :class:`set` are no longer supported.  The set must first be converted
-      to a :class:`list` or :class:`tuple`, preferably in a deterministic
-      order so that the sample is reproducible.
+   .. versionchanged:: 3.11
+
+      The *population* must be a sequence.  Automatic conversion of sets
+      to lists is no longer supported.
 
 
 .. _real-valued-distributions:
@@ -324,7 +320,7 @@ be found in any statistics text.
                    math.gamma(alpha) * beta ** alpha
 
 
-.. function:: gauss(mu, sigma)
+.. function:: gauss(mu=0.0, sigma=1.0)
 
    Normal distribution, also called the Gaussian distribution.  *mu* is the mean,
    and *sigma* is the standard deviation.  This is slightly faster than
@@ -337,6 +333,9 @@ be found in any statistics text.
    number generator. 2) Put locks around all calls. 3) Use the
    slower, but thread-safe :func:`normalvariate` function instead.
 
+   .. versionchanged:: 3.11
+      *mu* and *sigma* now have default arguments.
+
 
 .. function:: lognormvariate(mu, sigma)
 
@@ -346,9 +345,12 @@ be found in any statistics text.
    zero.
 
 
-.. function:: normalvariate(mu, sigma)
+.. function:: normalvariate(mu=0.0, sigma=1.0)
 
    Normal distribution.  *mu* is the mean, and *sigma* is the standard deviation.
+
+   .. versionchanged:: 3.11
+      *mu* and *sigma* now have default arguments.
 
 
 .. function:: vonmisesvariate(mu, kappa)
@@ -474,7 +476,7 @@ Example of `statistical bootstrapping
 <https://en.wikipedia.org/wiki/Bootstrapping_(statistics)>`_ using resampling
 with replacement to estimate a confidence interval for the mean of a sample::
 
-   # http://statistics.about.com/od/Applications/a/Example-Of-Bootstrapping.htm
+   # https://www.thoughtco.com/example-of-bootstrapping-3126155
    from statistics import fmean as mean
    from random import choices
 
@@ -548,13 +550,13 @@ Simulation of arrival times and service deliveries for a multiserver queue::
    `Economics Simulation
    <http://nbviewer.jupyter.org/url/norvig.com/ipython/Economics.ipynb>`_
    a simulation of a marketplace by
-   `Peter Norvig <http://norvig.com/bio.html>`_ that shows effective
+   `Peter Norvig <https://norvig.com/bio.html>`_ that shows effective
    use of many of the tools and distributions provided by this module
    (gauss, uniform, sample, betavariate, choice, triangular, and randrange).
 
    `A Concrete Introduction to Probability (using Python)
-   <http://nbviewer.jupyter.org/url/norvig.com/ipython/Probability.ipynb>`_
-   a tutorial by `Peter Norvig <http://norvig.com/bio.html>`_ covering
+   <https://nbviewer.jupyter.org/url/norvig.com/ipython/Probability.ipynb>`_
+   a tutorial by `Peter Norvig <https://norvig.com/bio.html>`_ covering
    the basics of probability theory, how to write simulations, and
    how to perform data analysis using Python.
 

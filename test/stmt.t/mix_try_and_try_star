@@ -1,0 +1,6 @@
+try:
+    ...
+except ValueError:
+    pass
+except* CancelledError:
+    pass

@@ -593,8 +593,8 @@ class HTTPResponse(io.BufferedIOBase):
                     amt -= chunk_left
                 self.chunk_left = 0
             return b''.join(value)
-        except IncompleteRead:
-            raise IncompleteRead(b''.join(value))
+        except IncompleteRead as exc:
+            raise IncompleteRead(b''.join(value)) from exc
 
     def _readinto_chunked(self, b):
         assert self.chunked != _UNKNOWN
@@ -942,7 +942,7 @@ class HTTPConnection:
             (self.host,self.port), self.timeout, self.source_address)
         # Might fail in OSs that don't implement TCP_NODELAY
         try:
-             self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         except OSError as e:
             if e.errno != errno.ENOPROTOOPT:
                 raise

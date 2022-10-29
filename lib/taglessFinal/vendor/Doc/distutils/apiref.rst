@@ -11,7 +11,7 @@ API Reference
       and other APIs, makes the API consistent across different Python versions,
       and is hence recommended over using ``distutils`` directly.
 
-.. _New and changed setup.py arguments in setuptools: https://setuptools.readthedocs.io/en/latest/setuptools.html#new-and-changed-setup-keywords
+.. _New and changed setup.py arguments in setuptools: https://web.archive.org/web/20210614192516/https://setuptools.pypa.io/en/stable/userguide/keywords.html
 
 .. include:: ./_setuptools_disclaimer.rst
 
@@ -1198,7 +1198,7 @@ other utility module.
    it contains certain values: see :func:`check_environ`.  Raise :exc:`ValueError`
    for any variables not found in either *local_vars* or ``os.environ``.
 
-   Note that this is not a fully-fledged string interpolation function. A valid
+   Note that this is not a full-fledged string interpolation function. A valid
    ``$variable`` can consist only of upper and lower case letters, numbers and an
    underscore. No { } or ( ) style quoting is available.
 
@@ -1850,22 +1850,6 @@ Subclasses of :class:`Command` must define the following methods.
 
 
 .. % todo
-
-
-:mod:`distutils.command.bdist_msi` --- Build a Microsoft Installer binary package
-=================================================================================
-
-.. module:: distutils.command.bdist_msi
-   :synopsis: Build a binary distribution as a Windows MSI file
-
-.. class:: bdist_msi
-
-.. deprecated:: 3.9
-   Use bdist_wheel (wheel packages) instead.
-
-   Builds a `Windows Installer`_ (.msi) binary package.
-
-   .. _Windows Installer: https://msdn.microsoft.com/en-us/library/cc185688(VS.85).aspx
 
 
 :mod:`distutils.command.bdist_rpm` --- Build a binary distribution as a Redhat RPM and SRPM

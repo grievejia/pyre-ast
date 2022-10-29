@@ -29,6 +29,7 @@ See :pep:`405` for more information about Python virtual environments.
    `Python Packaging User Guide: Creating and using virtual environments
    <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment>`__
 
+.. include:: ../includes/wasm-notavail.rst
 
 Creating virtual environments
 -----------------------------
@@ -84,6 +85,19 @@ Creating virtual environments
    without there needing to be any reference to its virtual environment in
    ``PATH``.
 
+.. warning:: Because scripts installed in environments should not expect the
+   environment to be activated, their shebang lines contain the absolute paths
+   to their environment's interpreters. Because of this, environments are
+   inherently non-portable, in the general case. You should always have a
+   simple means of recreating an environment (for example, if you have a
+   requirements file ``requirements.txt``, you can invoke ``pip install -r
+   requirements.txt`` using the environment's ``pip`` to install all of the
+   packages needed by the environment). If for any reason you need to move the
+   environment to a new location, you should recreate it at the desired
+   location and delete the one at the old location. If you move an environment
+   because you moved a parent directory of it, you should recreate the
+   environment in its new location. Otherwise, software installed into the
+   environment may not work as expected.
 
 .. _venv-api:
 
@@ -170,11 +184,17 @@ creation according to their needs, the :class:`EnvBuilder` class.
 
     .. method:: ensure_directories(env_dir)
 
-        Creates the environment directory and all necessary directories, and
-        returns a context object.  This is just a holder for attributes (such as
-        paths), for use by the other methods. The directories are allowed to
-        exist already, as long as either ``clear`` or ``upgrade`` were
-        specified to allow operating on an existing environment directory.
+        Creates the environment directory and all necessary subdirectories that
+        don't already exist, and returns a context object.  This context object
+        is just a holder for attributes (such as paths) for use by the other
+        methods.  If the :class:`EnvBuilder` is created with the arg
+        ``clear=True``, contents of the environment directory will be cleared
+        and then all necessary subdirectories will be recreated.
+
+        .. versionchanged:: 3.11
+           The *venv*
+           :ref:`sysconfig installation scheme <installation_paths>`
+           is used to construct the paths of the created directories.
 
     .. method:: create_configuration(context)
 

@@ -17,6 +17,7 @@ Currently, the HOWTOs are:
    cporting.rst
    curses.rst
    descriptor.rst
+   enum.rst
    functional.rst
    logging.rst
    logging-cookbook.rst
@@ -30,4 +31,5 @@ Currently, the HOWTOs are:
    clinic.rst
    instrumentation.rst
    annotations.rst
+   isolating-extensions.rst
 
