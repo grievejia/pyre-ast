@@ -349,6 +349,13 @@ module Statement = struct
       orelse:'stmt list ->
       finalbody:'stmt list ->
       'stmt;
+    try_star :
+      location:'location ->
+      body:'stmt list ->
+      handlers:'except_handler list ->
+      orelse:'stmt list ->
+      finalbody:'stmt list ->
+      'stmt;
     assert_ : location:'location -> test:'expr -> msg:'expr option -> 'stmt;
     import : location:'location -> names:'alias list -> 'stmt;
     import_from :
@@ -362,8 +369,8 @@ module Statement = struct
   }
 
   let make ~function_def ~async_function_def ~class_def ~return ~delete ~assign ~aug_assign
-      ~ann_assign ~for_ ~async_for ~while_ ~if_ ~with_ ~async_with ~match_ ~raise_ ~try_ ~assert_
-      ~import ~import_from ~global ~nonlocal ~expr ~pass ~break ~continue () =
+      ~ann_assign ~for_ ~async_for ~while_ ~if_ ~with_ ~async_with ~match_ ~raise_ ~try_ ~try_star
+      ~assert_ ~import ~import_from ~global ~nonlocal ~expr ~pass ~break ~continue () =
     {
       function_def;
       async_function_def;
@@ -382,6 +389,7 @@ module Statement = struct
       match_;
       raise_;
       try_;
+      try_star;
       assert_;
       import;
       import_from;

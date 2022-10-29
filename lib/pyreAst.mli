@@ -982,7 +982,7 @@ def foo(
         orelse:'stmt list ->
         finalbody:'stmt list ->
         'stmt;
-          (** Represent a [try] statement.
+          (** Represent a [try...except] statement.
 
               - [body] is the body of the try block, i.e. the logic to run in the normal case.
               - [handlers] is a list of exception handlers, specifying the logic to run in the
@@ -991,6 +991,18 @@ def foo(
                 without having any exception raised and without early return/continue/break.
               - [finalbody] is the list of statements that is guaranteed to be executed when
                 execution leaves the try block, regardless of whether an exception occured or not. *)
+      try_star :
+        location:'location ->
+        body:'stmt list ->
+        handlers:'except_handler list ->
+        orelse:'stmt list ->
+        finalbody:'stmt list ->
+        'stmt;
+          (** Represent a [try...except*] statement. See {{:https://peps.python.org/pep-0654/} PEP
+              654}.
+
+              Arguments here means the same thing as the [try...except] statement, except that the
+              [handlers] part should be interpreted as catching&handling exception groups. *)
       assert_ : location:'location -> test:'expr -> msg:'expr option -> 'stmt;
           (** Represent an [assert] statement.
 
@@ -1083,6 +1095,13 @@ def foo(
       match_:(location:'a -> subject:'e -> cases:'i list -> 'd) ->
       raise_:(location:'a -> exc:'e option -> cause:'e option -> 'd) ->
       try_:
+        (location:'a ->
+        body:'d list ->
+        handlers:'j list ->
+        orelse:'d list ->
+        finalbody:'d list ->
+        'd) ->
+      try_star:
         (location:'a ->
         body:'d list ->
         handlers:'j list ->
@@ -1592,6 +1611,13 @@ module Concrete : sig
       | Match of { location : Location.t; subject : Expression.t; cases : MatchCase.t list }
       | Raise of { location : Location.t; exc : Expression.t option; cause : Expression.t option }
       | Try of {
+          location : Location.t;
+          body : t list;
+          handlers : ExceptionHandler.t list;
+          orelse : t list;
+          finalbody : t list;
+        }
+      | TryStar of {
           location : Location.t;
           body : t list;
           handlers : ExceptionHandler.t list;

@@ -433,6 +433,13 @@ and Statement : sig
         orelse : t list;
         finalbody : t list;
       }
+    | TryStar of {
+        location : Location.t;
+        body : t list;
+        handlers : ExceptionHandler.t list;
+        orelse : t list;
+        finalbody : t list;
+      }
     | Assert of { location : Location.t; test : Expression.t; msg : Expression.t option }
     | Import of { location : Location.t; names : ImportAlias.t list }
     | ImportFrom of {
@@ -530,6 +537,13 @@ end = struct
     | Match of { location : Location.t; subject : Expression.t; cases : MatchCase.t list }
     | Raise of { location : Location.t; exc : Expression.t option; cause : Expression.t option }
     | Try of {
+        location : Location.t;
+        body : t list;
+        handlers : ExceptionHandler.t list;
+        orelse : t list;
+        finalbody : t list;
+      }
+    | TryStar of {
         location : Location.t;
         body : t list;
         handlers : ExceptionHandler.t list;
@@ -710,6 +724,8 @@ module MakeTaglessFinal = struct
       ~raise_:(fun ~location ~exc ~cause -> make_raise_of_t ~location ?exc ?cause ())
       ~try_:(fun ~location ~body ~handlers ~orelse ~finalbody ->
         make_try_of_t ~location ~body ~handlers ~orelse ~finalbody ())
+      ~try_star:(fun ~location ~body ~handlers ~orelse ~finalbody ->
+        make_trystar_of_t ~location ~body ~handlers ~orelse ~finalbody ())
       ~assert_:(fun ~location ~test ~msg -> make_assert_of_t ~location ~test ?msg ())
       ~import:(fun ~location ~names -> make_import_of_t ~location ~names ())
       ~import_from:(fun ~location ~module_ ~names ~level ->
