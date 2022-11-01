@@ -1520,11 +1520,11 @@ module Concrete : sig
           cls : Expression.t;
           patterns : t list;
           kwd_attrs : Identifier.t list;
-          kwd_patterns : Pattern.t list;
+          kwd_patterns : t list;
         }
       | MatchStar of { location : Location.t; name : Identifier.t option }
-      | MatchAs of { location : Location.t; pattern : Pattern.t option; name : Identifier.t option }
-      | MatchOr of { location : Location.t; patterns : Pattern.t list }
+      | MatchAs of { location : Location.t; pattern : t option; name : Identifier.t option }
+      | MatchOr of { location : Location.t; patterns : t list }
     [@@deriving sexp, compare, hash, make]
   end
 
