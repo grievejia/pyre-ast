@@ -18,8 +18,7 @@ To use [pyre-ast] in your dune project, you can add [pyre-ast] to the [libraries
 
 {[
 (library
-  (name mylib)
-  (libraries pyre-ast))
+  (name mylib) (libraries pyre-ast))
 ]}
 
 {2 Parsing APIs}
@@ -36,7 +35,7 @@ let example content =
   	| Result.Error { Error.message; line; column } ->
   	  let message = 
   	    Format.sprintf "Parsing error at line %d, column %d: %s"
-  	    message line column
+  	    line column message
   	  in
   	  failwith message
   	| Result.Ok ast -> ast
