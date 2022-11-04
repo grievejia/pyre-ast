@@ -140,7 +140,7 @@
     running example.
 
     Keeping the structure of {!type: TaglessFinal.t} fully authentic to Python's official
-    {{:https://docs.python.org/3.10/library/ast.html} [ast]} module is an explicit design goal for
+    {{:https://docs.python.org/3.11/library/ast.html} [ast]} module is an explicit design goal for
     this library. Even if Python's own [ast] representation may exhibit some obvious issues or
     inconsistencies, it is not the job of this module to fix them, for both philosophical and
     techinical reasons. If certain design of [ast] is undesirable, the recommended way to address
@@ -236,7 +236,7 @@ module TaglessFinal : sig
       be read at runtime, those that will be written at runtime, and those that will be [del]ed at
       runtime.
 
-      As of Python 3.10, there are 6 kinds of expressions with an explicit context field:
+      As of Python 3.11, there are 6 kinds of expressions with an explicit context field:
 
       - {!field: Expression.name}
       - {!field: Expression.attribute}
@@ -281,7 +281,7 @@ module TaglessFinal : sig
           (** Represents Python operator [@], as specified in
               {{:https://www.python.org/dev/peps/pep-0465/} PEP 465}.
 
-              As of Python 3.10, no builtin Python types implement this operator. *)
+              As of Python 3.11, no builtin Python types implement this operator. *)
       div : 'a;  (** Represents Python operator [/]. *)
       mod_ : 'a;  (** Represents Python operator [%]. *)
       pow : 'a;  (** Represents Python operator [**]. *)

@@ -1,3 +1,8 @@
+## 0.1.9 (2022-11-4)
+
+- Bump the bundled CPython version to 3.11.0
+- Fixed segfaults when parsing with default filename
+
 ## 0.1.8 (2021-12-21)
 
 - Bump the bundled CPython version to 3.10.1
