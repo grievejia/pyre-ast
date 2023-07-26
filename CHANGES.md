@@ -1,3 +1,7 @@
+## trunk
+
+- Compatibility with bytecode executables. This is achieved by removing the bundled `libpython.a` static library and instead just statically linking it into the binding.
+
 ## 0.1.9 (2022-11-4)
 
 - Bump the bundled CPython version to 3.11.0
@@ -15,12 +19,12 @@
 
 ## 0.1.6 (2021-11-12)
 
-- Expose 2 additional fields `end_lineno` and `end_offset` from CPython3.10 `SyntaxError`. Fix an error in documentation where column numbers should start from 1 instead of 0. 
+- Expose 2 additional fields `end_lineno` and `end_offset` from CPython3.10 `SyntaxError`. Fix an error in documentation where column numbers should start from 1 instead of 0.
 - Remove the optional `filename` argument from the `parse_module` API. It turns out that this argument is actually dropped when computing error messages so it does not serve any purpose at the moment.
 
 ## 0.1.5 (2021-10-8)
 
-- Disable LTO build of CPython in release mode. Turning on LTO turns out to be rather detrimental to link time when building downstream binaries. 
+- Disable LTO build of CPython in release mode. Turning on LTO turns out to be rather detrimental to link time when building downstream binaries.
 
 ## 0.1.4 (2021-10-5)
 

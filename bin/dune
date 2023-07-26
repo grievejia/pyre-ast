@@ -1,3 +1,4 @@
 (executable
  (name pyre_parse)
+ (modes byte exe)
  (libraries pyreAst stdio sexplib cmdliner))
