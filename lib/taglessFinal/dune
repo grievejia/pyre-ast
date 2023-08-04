@@ -9,7 +9,7 @@
 (rule
  (deps
   (source_tree vendor))
- (targets libpython.a pyconfig.h)
+ (targets pyconfig.h libpython.a)
  (action
   (no-infer
    (progn
@@ -19,7 +19,7 @@
       MACOSX_DEPLOYMENT_TARGET
       11.0
       (progn
-       (run ./configure)
+       (run ./configure --enable-shared)
        (run make libpython3.11.a))))
     (copy vendor/libpython3.11.a libpython.a)
     (copy vendor/pyconfig.h pyconfig.h)))))
@@ -28,10 +28,12 @@
  (name taglessFinal)
  (package pyre-ast)
  (libraries base)
- (no_dynlink)
  (foreign_stubs
   (language c)
   (names binding)
   (flags :standard -Ivendor/Include -I.))
- (c_library_flags -lpython -lutil -lpthread)
- (foreign_archives python))
+ (c_library_flags
+  -lpthread
+  -lpython
+  -lutil
+  -L%{project_root}/_build/default/lib/taglessFinal/))
