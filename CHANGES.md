@@ -1,3 +1,7 @@
+## unreleased
+
+- Bump the bundled CPython version to 3.12.0
+
 ## 0.1.9 (2022-11-4)
 
 - Bump the bundled CPython version to 3.11.0

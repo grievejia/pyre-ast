@@ -690,6 +690,36 @@ def foo(
       location:'location -> name:'identifier -> asname:'identifier option -> 'alias
   end
 
+  (** This module provides a type that represents a Python type parameter item. See
+      {{:https://peps.python.org/pep-0695/} PEP 695}.
+
+      It can only appear on the following statements: {!field: Statement.function_def},
+      {!field: Statement.async_function_def}, {!field: Statement.class_def}, and
+      {!field: Statement.type_alias}. In the source texts, type parameters are usually surrounded by
+      a pair of square brackets. *)
+  module TypeParam : sig
+    type ('expr, 'identifier, 'location, 'type_param) t = {
+      type_var : location:'location -> name:'identifier -> bound:'expr option -> 'type_param;
+          (** Represent a normal type variables, e.g. [T]. The optional [bound] parameter can be
+              used to specify either an upper bound (e.g. [T: int]) or a constrained type (e.g.
+              [T: (str, bytes)]) *)
+      param_spec : location:'location -> name:'identifier -> 'type_param;
+          (** Represent a param spec type variable, e.g. [**P]. For meaning of param spec, consult
+              {{:https://peps.python.org/pep-0612/} PEP 612}. *)
+      type_var_tuple : location:'location -> name:'identifier -> 'type_param;
+          (** Represent a type var tuple variable, e.g. [*T]. For meaning of type var tuple, consult
+              {{:https://peps.python.org/pep-0646/} PEP 646}. *)
+    }
+
+    val make :
+      type_var:(location:'a -> name:'b -> bound:'c option -> 'd) ->
+      param_spec:(location:'a -> name:'b -> 'd) ->
+      type_var_tuple:(location:'a -> name:'b -> 'd) ->
+      unit ->
+      ('c, 'b, 'a, 'd) t
+    (** Constructor of {!type: t}. *)
+  end
+
   (** This module provides a type that represents a Python exception handler.
 
       Example: [try ... except Foo as e: pass]. Here [type_] will be set to [Foo], [name] will be
@@ -781,6 +811,7 @@ def foo(
            'keyword,
            'location,
            'match_case,
+           'type_param,
            'with_item,
            'stmt)
          t =
@@ -793,6 +824,7 @@ def foo(
         decorator_list:'expr list ->
         returns:'expr option ->
         type_comment:string option ->
+        type_params:'type_param list ->
         'stmt;
           (** Represent a function definition (i.e. [def]) statement.
 
@@ -802,7 +834,9 @@ def foo(
               - [decorator_list] is the list of decorators applied to the function.
               - [returns] is the (optionally specified) return annotation.
               - [type_comment] is the Py2-style type comment for the function (see
-                {!val:Parser.TaglessFinal.parse_function_type}). *)
+                {!val:Parser.TaglessFinal.parse_function_type}).
+              - [type_params] (optionally) specifies what type variables this function is generic
+                against (see {!module:TypeParam}). *)
       async_function_def :
         location:'location ->
         name:'identifier ->
@@ -811,6 +845,7 @@ def foo(
         decorator_list:'expr list ->
         returns:'expr option ->
         type_comment:string option ->
+        type_params:'type_param list ->
         'stmt;
           (** Represent an async function definition (i.e. [async def]) statement. It has exactly
               the same set of fields as [def] statement. *)
@@ -821,6 +856,7 @@ def foo(
         keywords:'keyword list ->
         body:'stmt list ->
         decorator_list:'expr list ->
+        type_params:'type_param list ->
         'stmt;
           (** Represent a class definition (i.e. [class]) statement.
 
@@ -833,7 +869,9 @@ def foo(
                 but can also be used for other customizations of class creation (see
                 {{:https://www.python.org/dev/peps/pep-0487/} PEP 487}).
               - [body] is the body of the class.
-              - [decorator_list] is the list of decorators applied to the function. *)
+              - [decorator_list] is the list of decorators applied to the function.
+              - [type_params] (optionally) specifies what type variables this function is generic
+                against (see {!module:TypeParam}). *)
       return : location:'location -> value:'expr option -> 'stmt;
           (** Represent a [return] statement.
 
@@ -865,6 +903,18 @@ def foo(
                 [targets] contains more than one element, then type comment is the only possible way
                 to specify the annotation for [targets] as the {!field: ann_assign} statement only
                 supports inline annotation for a single target. *)
+      type_alias :
+        location:'location -> name:'expr -> type_params:'type_param list -> value:'expr -> 'stmt;
+          (** Represent a type alias statement. (see
+              {{:https://www.python.org/dev/peps/pep-0695/} PEP 695})
+
+              - [name] is the name of the alias being assigned to. It's marked as an expression but
+                in CPython implementation, it's always going to be an {!field:Expression.name} with
+                context set to {!field:ExpressionContext.store}.
+              - [type_params] is the list of type variables this alias is generic against. For
+                simple non-generic type alias definitions this is always going to be empty list.
+              - [value] is the type to be assigned to [name], i.e. the "right-hand-side" of the
+                alias definition. *)
       aug_assign : location:'location -> target:'expr -> op:'bin_op -> value:'expr -> 'stmt;
           (** Represent an augmented assignment statement (see
               {{:https://www.python.org/dev/peps/pep-0203/} PEP 203}).
@@ -1052,6 +1102,7 @@ def foo(
         decorator_list:'e list ->
         returns:'e option ->
         type_comment:string option ->
+        type_params:'f list ->
         'd) ->
       async_function_def:
         (location:'a ->
@@ -1061,19 +1112,22 @@ def foo(
         decorator_list:'e list ->
         returns:'e option ->
         type_comment:string option ->
+        type_params:'f list ->
         'd) ->
       class_def:
         (location:'a ->
         name:'b ->
         bases:'e list ->
-        keywords:'f list ->
+        keywords:'g list ->
         body:'d list ->
         decorator_list:'e list ->
+        type_params:'f list ->
         'd) ->
       return:(location:'a -> value:'e option -> 'd) ->
       delete:(location:'a -> targets:'e list -> 'd) ->
       assign:(location:'a -> targets:'e list -> value:'e -> type_comment:string option -> 'd) ->
-      aug_assign:(location:'a -> target:'e -> op:'g -> value:'e -> 'd) ->
+      type_alias:(location:'a -> name:'e -> type_params:'f list -> value:'e -> 'd) ->
+      aug_assign:(location:'a -> target:'e -> op:'h -> value:'e -> 'd) ->
       ann_assign:(location:'a -> target:'e -> annotation:'e -> value:'e option -> simple:bool -> 'd) ->
       for_:
         (location:'a ->
@@ -1093,27 +1147,27 @@ def foo(
         'd) ->
       while_:(location:'a -> test:'e -> body:'d list -> orelse:'d list -> 'd) ->
       if_:(location:'a -> test:'e -> body:'d list -> orelse:'d list -> 'd) ->
-      with_:(location:'a -> items:'h list -> body:'d list -> type_comment:string option -> 'd) ->
-      async_with:(location:'a -> items:'h list -> body:'d list -> type_comment:string option -> 'd) ->
-      match_:(location:'a -> subject:'e -> cases:'i list -> 'd) ->
+      with_:(location:'a -> items:'i list -> body:'d list -> type_comment:string option -> 'd) ->
+      async_with:(location:'a -> items:'i list -> body:'d list -> type_comment:string option -> 'd) ->
+      match_:(location:'a -> subject:'e -> cases:'j list -> 'd) ->
       raise_:(location:'a -> exc:'e option -> cause:'e option -> 'd) ->
       try_:
         (location:'a ->
         body:'d list ->
-        handlers:'j list ->
+        handlers:'k list ->
         orelse:'d list ->
         finalbody:'d list ->
         'd) ->
       try_star:
         (location:'a ->
         body:'d list ->
-        handlers:'j list ->
+        handlers:'k list ->
         orelse:'d list ->
         finalbody:'d list ->
         'd) ->
       assert_:(location:'a -> test:'e -> msg:'e option -> 'd) ->
-      import:(location:'a -> names:'k list -> 'd) ->
-      import_from:(location:'a -> module_:'b option -> names:'k list -> level:int -> 'd) ->
+      import:(location:'a -> names:'l list -> 'd) ->
+      import_from:(location:'a -> module_:'b option -> names:'l list -> level:int -> 'd) ->
       global:(location:'a -> names:'b list -> 'd) ->
       nonlocal:(location:'a -> names:'b list -> 'd) ->
       expr:(location:'a -> value:'e -> 'd) ->
@@ -1121,7 +1175,7 @@ def foo(
       break:(location:'a -> 'd) ->
       continue:(location:'a -> 'd) ->
       unit ->
-      ('k, 'c, 'g, 'j, 'e, 'b, 'f, 'a, 'i, 'h, 'd) t
+      ('l, 'c, 'h, 'k, 'e, 'b, 'g, 'a, 'j, 'f, 'i, 'd) t
     (** Constructor of {!type: t}. *)
   end
 
@@ -1172,6 +1226,7 @@ def foo(
          'position,
          'statement,
          'type_ignore,
+         'type_param,
          'unary_operator,
          'with_item)
        t =
@@ -1219,10 +1274,12 @@ def foo(
         'keyword,
         'location,
         'match_case,
+        'type_param,
         'with_item,
         'statement )
       Statement.t;
     type_ignore : 'type_ignore TypeIgnore.t;
+    type_param : ('expression, 'identifier, 'location, 'type_param) TypeParam.t;
     unary_operator : 'unary_operator UnaryOperator.t;
     with_item : ('expression, 'with_item) WithItem.t;
   }
@@ -1247,12 +1304,37 @@ def foo(
     module_:('k, 'u, 'v) Module.t ->
     pattern:('j, 'a, 'b, 'c, 's) Pattern.t ->
     position:'r Position.t ->
-    statement:('q, 'e, 'f, 'l, 'a, 'b, 'n, 'c, 't, 'w, 'k) Statement.t ->
+    statement:('q, 'e, 'f, 'l, 'a, 'b, 'n, 'c, 't, 'w, 'x, 'k) Statement.t ->
     type_ignore:'u TypeIgnore.t ->
+    type_param:('a, 'b, 'c, 'w) TypeParam.t ->
     unary_operator:'o UnaryOperator.t ->
-    with_item:('a, 'w) WithItem.t ->
+    with_item:('a, 'x) WithItem.t ->
     unit ->
-    ('d, 'e, 'f, 'g, 'h, 'i, 'j, 'l, 'a, 'm, 'p, 'b, 'q, 'n, 'c, 't, 'v, 's, 'r, 'k, 'u, 'o, 'w) t
+    ( 'd,
+      'e,
+      'f,
+      'g,
+      'h,
+      'i,
+      'j,
+      'l,
+      'a,
+      'm,
+      'p,
+      'b,
+      'q,
+      'n,
+      'c,
+      't,
+      'v,
+      's,
+      'r,
+      'k,
+      'u,
+      'w,
+      'o,
+      'x )
+    t
   (** Constructor of {!type: t}. *)
 end
 
@@ -1490,6 +1572,15 @@ module Concrete : sig
     [@@deriving sexp, compare, hash, make]
   end
 
+  (** See {!module: TaglessFinal.TypeParam}. *)
+  module TypeParam : sig
+    type t =
+      | TypeVar of { location : Location.t; name : Identifier.t; bound : Expression.t option }
+      | ParamSpec of { location : Location.t; name : Identifier.t }
+      | TypeVarTuple of { location : Location.t; name : Identifier.t }
+    [@@deriving sexp, compare, hash, make]
+  end
+
   (** See {!module: TaglessFinal.ExceptionHandler}. *)
   module rec ExceptionHandler : sig
     type t = private {
@@ -1543,6 +1634,7 @@ module Concrete : sig
           decorator_list : Expression.t list;
           returns : Expression.t option;
           type_comment : string option;
+          type_params : TypeParam.t list;
         }
       | AsyncFunctionDef of {
           location : Location.t;
@@ -1552,6 +1644,7 @@ module Concrete : sig
           decorator_list : Expression.t list;
           returns : Expression.t option;
           type_comment : string option;
+          type_params : TypeParam.t list;
         }
       | ClassDef of {
           location : Location.t;
@@ -1560,6 +1653,7 @@ module Concrete : sig
           keywords : Keyword.t list;
           body : t list;
           decorator_list : Expression.t list;
+          type_params : TypeParam.t list;
         }
       | Return of { location : Location.t; value : Expression.t option }
       | Delete of { location : Location.t; targets : Expression.t list }
@@ -1568,6 +1662,12 @@ module Concrete : sig
           targets : Expression.t list;
           value : Expression.t;
           type_comment : string option;
+        }
+      | TypeAlias of {
+          location : Location.t;
+          name : Expression.t;
+          type_params : TypeParam.t list;
+          value : Expression.t;
         }
       | AugAssign of {
           location : Location.t;
@@ -1685,6 +1785,7 @@ module Concrete : sig
       Position.t,
       Statement.t,
       TypeIgnore.t,
+      TypeParam.t,
       UnaryOperator.t,
       WithItem.t )
     TaglessFinal.t
@@ -1766,7 +1867,31 @@ module Parser : sig
     val parse_module :
       context:Context.t ->
       spec:
-        (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _) TaglessFinal.t ->
+        ( _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          'module_,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _ )
+        TaglessFinal.t ->
       ?enable_type_comment:bool ->
       string ->
       ('module_, Error.t) Result.t
@@ -1790,6 +1915,7 @@ module Parser : sig
           _,
           _,
           'expression,
+          _,
           _,
           _,
           _,
@@ -1829,6 +1955,7 @@ module Parser : sig
           _,
           _,
           'function_type,
+          _,
           _,
           _,
           _,

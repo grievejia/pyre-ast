@@ -1,7 +1,6 @@
 import _thread
 import asyncio
 import contextvars
-import gc
 import re
 import signal
 import threading
@@ -102,11 +101,14 @@ class RunTests(BaseTest):
             loop = asyncio.get_event_loop()
             self.assertIs(loop.get_debug(), expected)
 
-        asyncio.run(main(False))
+        asyncio.run(main(False), debug=False)
         asyncio.run(main(True), debug=True)
         with mock.patch('asyncio.coroutines._is_debug_mode', lambda: True):
             asyncio.run(main(True))
             asyncio.run(main(False), debug=False)
+        with mock.patch('asyncio.coroutines._is_debug_mode', lambda: False):
+            asyncio.run(main(True), debug=True)
+            asyncio.run(main(False))
 
     def test_asyncio_run_from_running_loop(self):
         async def main():
@@ -257,6 +259,16 @@ class RunTests(BaseTest):
         asyncio.set_event_loop_policy(TestPolicy(new_event_loop))
         with self.assertRaises(asyncio.CancelledError):
             asyncio.run(main())
+
+    def test_asyncio_run_loop_factory(self):
+        factory = mock.Mock()
+        loop = factory.return_value = self.new_loop()
+
+        async def main():
+            self.assertEqual(asyncio.get_running_loop(), loop)
+
+        asyncio.run(main(), loop_factory=factory)
+        factory.assert_called_once_with()
 
 
 class RunnerTests(BaseTest):
@@ -438,9 +450,9 @@ class RunnerTests(BaseTest):
         with asyncio.Runner() as runner:
             with self.assertRaises(asyncio.CancelledError):
                 runner.run(coro())
-    
+
     def test_signal_install_not_supported_ok(self):
-        # signal.signal() can throw if the "main thread" doensn't have signals enabled
+        # signal.signal() can throw if the "main thread" doesn't have signals enabled
         assert threading.current_thread() is threading.main_thread()
 
         async def coro():

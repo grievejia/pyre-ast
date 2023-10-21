@@ -1222,14 +1222,14 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 7)))))
    (values
     ((Constant
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 7)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 6)))))
       (value (String derp)) (kind ())))))
   $ echo 'f"{x}"' | parse expression -
   (JoinedStr
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 6)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 6)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 5)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1240,10 +1240,10 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 11)))))
    (values
     ((Constant
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 11)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 7)))))
       (value (String derp=)) (kind ()))
      (FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 11)))))
+      (location ((start ((line 1) (column 7))) (stop ((line 1) (column 10)))))
       (value
        (Name
         (location ((start ((line 1) (column 8))) (stop ((line 1) (column 9)))))
@@ -1254,7 +1254,7 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 7)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1265,7 +1265,7 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 7)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1276,7 +1276,7 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 8)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 7)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1287,7 +1287,7 @@ Test fstrings
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 10)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 10)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 9)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1296,18 +1296,18 @@ Test fstrings
       (format_spec
        ((JoinedStr
          (location
-          ((start ((line 1) (column 0))) (stop ((line 1) (column 10)))))
+          ((start ((line 1) (column 4))) (stop ((line 1) (column 8)))))
          (values
           ((Constant
             (location
-             ((start ((line 1) (column 0))) (stop ((line 1) (column 10)))))
+             ((start ((line 1) (column 5))) (stop ((line 1) (column 8)))))
             (value (String 1.2)) (kind ())))))))))))
   $ echo 'f"{x:{w+1}.{p}}"' | parse expression -
   (JoinedStr
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 15)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
@@ -1316,11 +1316,11 @@ Test fstrings
       (format_spec
        ((JoinedStr
          (location
-          ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
+          ((start ((line 1) (column 4))) (stop ((line 1) (column 14)))))
          (values
           ((FormattedValue
             (location
-             ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
+             ((start ((line 1) (column 5))) (stop ((line 1) (column 10)))))
             (value
              (BinOp
               (location
@@ -1339,30 +1339,34 @@ Test fstrings
             (conversion -1) (format_spec ()))
            (Constant
             (location
-             ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
+             ((start ((line 1) (column 10))) (stop ((line 1) (column 11)))))
             (value (String .)) (kind ()))
            (FormattedValue
             (location
-             ((start ((line 1) (column 0))) (stop ((line 1) (column 16)))))
+             ((start ((line 1) (column 11))) (stop ((line 1) (column 14)))))
             (value
              (Name
               (location
                ((start ((line 1) (column 12))) (stop ((line 1) (column 13)))))
               (id p) (ctx Load)))
-            (conversion -1) (format_spec ())))))))))))
+            (conversion -1) (format_spec ()))
+           (Constant
+            (location
+             ((start ((line 1) (column 14))) (stop ((line 1) (column 14)))))
+            (value (String "")) (kind ())))))))))))
   $ echo 'f"{x}"f"{y}"' | parse expression -
   (JoinedStr
    (location ((start ((line 1) (column 0))) (stop ((line 1) (column 12)))))
    (values
     ((FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 12)))))
+      (location ((start ((line 1) (column 2))) (stop ((line 1) (column 5)))))
       (value
        (Name
         (location ((start ((line 1) (column 3))) (stop ((line 1) (column 4)))))
         (id x) (ctx Load)))
       (conversion -1) (format_spec ()))
      (FormattedValue
-      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 12)))))
+      (location ((start ((line 1) (column 8))) (stop ((line 1) (column 11)))))
       (value
        (Name
         (location

@@ -8,6 +8,9 @@
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
+#ifdef HAVE_LINUX_FS_H
+#include <linux/fs.h>
+#endif
 
 #include <sys/ioctl.h>
 #include <fcntl.h>
@@ -208,11 +211,12 @@ fcntl_ioctl_impl(PyObject *module, int fd, unsigned int code,
             if (mutate_arg && (len <= IOCTL_BUFSZ)) {
                 memcpy(str, buf, len);
             }
-            PyBuffer_Release(&pstr); /* No further access to str below this point */
             if (ret < 0) {
                 PyErr_SetFromErrno(PyExc_OSError);
+                PyBuffer_Release(&pstr);
                 return NULL;
             }
+            PyBuffer_Release(&pstr);
             if (mutate_arg) {
                 return PyLong_FromLong(ret);
             }
@@ -237,8 +241,8 @@ fcntl_ioctl_impl(PyObject *module, int fd, unsigned int code,
             ret = ioctl(fd, code, buf);
             Py_END_ALLOW_THREADS
             if (ret < 0) {
-                PyBuffer_Release(&pstr);
                 PyErr_SetFromErrno(PyExc_OSError);
+                PyBuffer_Release(&pstr);
                 return NULL;
             }
             PyBuffer_Release(&pstr);
@@ -572,6 +576,12 @@ all_ins(PyObject* m)
 #ifdef F_GETPIPE_SZ
     if (PyModule_AddIntMacro(m, F_GETPIPE_SZ)) return -1;
 #endif
+#ifdef FICLONE
+    if (PyModule_AddIntMacro(m, FICLONE)) return -1;
+#endif
+#ifdef FICLONERANGE
+    if (PyModule_AddIntMacro(m, FICLONERANGE)) return -1;
+#endif
 
 /* OS X specifics */
 #ifdef F_FULLFSYNC
@@ -677,6 +687,7 @@ fcntl_exec(PyObject *module)
 
 static PyModuleDef_Slot fcntl_slots[] = {
     {Py_mod_exec, fcntl_exec},
+    {Py_mod_multiple_interpreters, Py_MOD_PER_INTERPRETER_GIL_SUPPORTED},
     {0, NULL}
 };
 

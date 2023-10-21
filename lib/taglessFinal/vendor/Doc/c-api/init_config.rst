@@ -82,6 +82,8 @@ PyWideStringList
    If *length* is non-zero, *items* must be non-``NULL`` and all strings must be
    non-``NULL``.
 
+   .. c:namespace:: NULL
+
    Methods:
 
    .. c:function:: PyStatus PyWideStringList_Append(PyWideStringList *list, const wchar_t *item)
@@ -100,6 +102,8 @@ PyWideStringList
       *index* must be greater than or equal to ``0``.
 
       Python must be preinitialized to call this function.
+
+   .. c:namespace:: PyWideStringList
 
    Structure fields:
 
@@ -134,6 +138,8 @@ PyStatus
    .. c:member:: const char *func
 
       Name of the function which created an error, can be ``NULL``.
+
+   .. c:namespace:: NULL
 
    Functions to create a status:
 
@@ -210,6 +216,8 @@ PyPreConfig
 
    Structure used to preinitialize Python.
 
+   .. c:namespace:: NULL
+
    Function to initialize a preconfiguration:
 
    .. c:function:: void PyPreConfig_InitPythonConfig(PyPreConfig *preconfig)
@@ -221,6 +229,8 @@ PyPreConfig
 
       Initialize the preconfiguration with :ref:`Isolated Configuration
       <init-isolated-conf>`.
+
+   .. c:namespace:: PyPreConfig
 
    Structure fields:
 
@@ -254,7 +264,7 @@ PyPreConfig
 
    .. c:member:: int configure_locale
 
-      Set the LC_CTYPE locale to the user preferred locale?
+      Set the LC_CTYPE locale to the user preferred locale.
 
       If equals to ``0``, set :c:member:`~PyPreConfig.coerce_c_locale` and
       :c:member:`~PyPreConfig.coerce_c_locale_warn` members to ``0``.
@@ -429,6 +439,8 @@ PyConfig
    When done, the :c:func:`PyConfig_Clear` function must be used to release the
    configuration memory.
 
+   .. c:namespace:: NULL
+
    Structure methods:
 
    .. c:function:: void PyConfig_InitPythonConfig(PyConfig *config)
@@ -522,10 +534,12 @@ PyConfig
    Moreover, if :c:func:`PyConfig_SetArgv` or :c:func:`PyConfig_SetBytesArgv`
    is used, this method must be called before other methods, since the
    preinitialization configuration depends on command line arguments (if
-   :c:member:`parse_argv` is non-zero).
+   :c:member:`~PyConfig.parse_argv` is non-zero).
 
    The caller of these methods is responsible to handle exceptions (error or
    exit) using ``PyStatus_Exception()`` and ``Py_ExitStatusException()``.
+
+   .. c:namespace:: PyConfig
 
    Structure fields:
 
@@ -828,14 +842,34 @@ PyConfig
 
       Default: ``0``.
 
+   .. c:member:: int int_max_str_digits
+
+      Configures the :ref:`integer string conversion length limitation
+      <int_max_str_digits>`.  An initial value of ``-1`` means the value will
+      be taken from the command line or environment or otherwise default to
+      4300 (:data:`sys.int_info.default_max_str_digits`).  A value of ``0``
+      disables the limitation.  Values greater than zero but less than 640
+      (:data:`sys.int_info.str_digits_check_threshold`) are unsupported and
+      will produce an error.
+
+      Configured by the :option:`-X int_max_str_digits <-X>` command line
+      flag or the :envvar:`PYTHONINTMAXSTRDIGITS` environment variable.
+
+      Default: ``-1`` in Python mode.  4300
+      (:data:`sys.int_info.default_max_str_digits`) in isolated mode.
+
+      .. versionadded:: 3.12
+
    .. c:member:: int isolated
 
       If greater than ``0``, enable isolated mode:
 
       * Set :c:member:`~PyConfig.safe_path` to ``1``:
         don't prepend a potentially unsafe path to :data:`sys.path` at Python
-        startup.
-      * Set :c:member:`~PyConfig.use_environment` to ``0``.
+        startup, such as the current directory, the script's directory or an
+        empty string.
+      * Set :c:member:`~PyConfig.use_environment` to ``0``: ignore ``PYTHON``
+        environment variables.
       * Set :c:member:`~PyConfig.user_site_directory` to ``0``: don't add the user
         site directory to :data:`sys.path`.
       * Python REPL doesn't import :mod:`readline` nor enable default readline
@@ -845,12 +879,13 @@ PyConfig
 
       Default: ``0`` in Python mode, ``1`` in isolated mode.
 
-      See also :c:member:`PyPreConfig.isolated`.
+      See also the :ref:`Isolated Configuration <init-isolated-conf>` and
+      :c:member:`PyPreConfig.isolated`.
 
    .. c:member:: int legacy_windows_stdio
 
       If non-zero, use :class:`io.FileIO` instead of
-      :class:`io.WindowsConsoleIO` for :data:`sys.stdin`, :data:`sys.stdout`
+      :class:`!io._WindowsConsoleIO` for :data:`sys.stdin`, :data:`sys.stdout`
       and :data:`sys.stderr`.
 
       Set to ``1`` if the :envvar:`PYTHONLEGACYWINDOWSSTDIO` environment
@@ -899,7 +934,7 @@ PyConfig
    .. c:member:: wchar_t* pythonpath_env
 
       Module search paths (:data:`sys.path`) as a string separated by ``DELIM``
-      (:data:`os.path.pathsep`).
+      (:data:`os.pathsep`).
 
       Set by the :envvar:`PYTHONPATH` environment variable.
 
@@ -981,6 +1016,9 @@ PyConfig
 
       Incremented by the :option:`-d` command line option. Set to the
       :envvar:`PYTHONDEBUG` environment variable value.
+
+      Need a :ref:`debug build of Python <debug-build>` (the ``Py_DEBUG`` macro
+      must be defined).
 
       Default: ``0``.
 
@@ -1075,7 +1113,7 @@ PyConfig
 
    .. c:member:: int show_ref_count
 
-      Show total reference count at exit?
+      Show total reference count at exit (excluding immortal objects)?
 
       Set to ``1`` by :option:`-X showrefcount <-X>` command line option.
 
@@ -1096,7 +1134,7 @@ PyConfig
 
       Set to ``0`` by the :option:`-S` command line option.
 
-      :data:`sys.flags.no_site` is set to the inverted value of
+      :data:`sys.flags.no_site <sys.flags>` is set to the inverted value of
       :c:member:`~PyConfig.site_import`.
 
       Default: ``1``.
@@ -1149,6 +1187,20 @@ PyConfig
 
       Default: ``-1`` in Python mode, ``0`` in isolated mode.
 
+   .. c:member:: int perf_profiling
+
+      Enable compatibility mode with the perf profiler?
+
+      If non-zero, initialize the perf trampoline. See :ref:`perf_profiling`
+      for more information.
+
+      Set by :option:`-X perf <-X>` command line option and by the
+      :envvar:`PYTHONPERFSUPPORT` environment variable.
+
+      Default: ``-1``.
+
+      .. versionadded:: 3.12
+
    .. c:member:: int use_environment
 
       Use :ref:`environment variables <using-on-envvars>`?
@@ -1176,13 +1228,13 @@ PyConfig
       imported, showing the place (filename or built-in module) from which
       it is loaded.
 
-      If greater or equal to ``2``, print a message for each file that is checked
-      for when searching for a module. Also provides information on module
-      cleanup at exit.
+      If greater than or equal to ``2``, print a message for each file that is
+      checked for when searching for a module. Also provides information on
+      module cleanup at exit.
 
       Incremented by the :option:`-v` command line option.
 
-      Set to the :envvar:`PYTHONVERBOSE` environment variable value.
+      Set by the :envvar:`PYTHONVERBOSE` environment variable value.
 
       Default: ``0``.
 
@@ -1533,8 +1585,6 @@ Private provisional API:
 
 * :c:member:`PyConfig._init_main`: if set to ``0``,
   :c:func:`Py_InitializeFromConfig` stops at the "Core" initialization phase.
-* :c:member:`PyConfig._isolated_interpreter`: if non-zero,
-  disallow threads, subprocesses and fork.
 
 .. c:function:: PyStatus _Py_InitializeMain(void)
 
@@ -1546,7 +1596,7 @@ applied during the "Main" phase. It may allow to customize Python in Python to
 override or tune the :ref:`Path Configuration <init-path-config>`, maybe
 install a custom :data:`sys.meta_path` importer or an import hook, etc.
 
-It may become possible to calculatin the :ref:`Path Configuration
+It may become possible to calculate the :ref:`Path Configuration
 <init-path-config>` in Python, after the Core phase and before the Main phase,
 which is one of the :pep:`432` motivation.
 

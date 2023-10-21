@@ -8,6 +8,9 @@ Logging HOWTO
 
 .. currentmodule:: logging
 
+This page contains tutorial information. For links to reference information and a
+logging cookbook, please see :ref:`tutorial-ref-links`.
+
 Basic Logging Tutorial
 ----------------------
 
@@ -336,7 +339,7 @@ favourite beverage and carry on.
 If your logging needs are simple, then use the above examples to incorporate
 logging into your own scripts, and if you run into problems or don't
 understand something, please post a question on the comp.lang.python Usenet
-group (available at https://groups.google.com/forum/#!forum/comp.lang.python) and you
+group (available at https://groups.google.com/g/comp.lang.python) and you
 should receive help before too long.
 
 Still here? You can carry on reading the next few sections, which provide a
@@ -415,6 +418,7 @@ The flow of log event information in loggers and handlers is illustrated in the
 following diagram.
 
 .. image:: logging_flow.png
+   :class: invert-in-dark-mode
 
 Loggers
 ^^^^^^^
@@ -975,7 +979,7 @@ provided:
 
 #. :class:`NullHandler` instances do nothing with error messages. They are used
    by library developers who want to use logging, but want to avoid the 'No
-   handlers could be found for logger XXX' message which can be displayed if
+   handlers could be found for logger *XXX*' message which can be displayed if
    the library user has not configured logging. See :ref:`library-config` for
    more information.
 
@@ -1101,10 +1105,18 @@ need:
 | Current process name when using ``multiprocessing`` | Set ``logging.logMultiprocessing`` to ``False``.  |
 | to manage multiple processes.                       |                                                   |
 +-----------------------------------------------------+---------------------------------------------------+
+| Current :class:`asyncio.Task` name when using       | Set ``logging.logAsyncioTasks`` to ``False``.     |
+| ``asyncio``.                                        |                                                   |
++-----------------------------------------------------+---------------------------------------------------+
 
 Also note that the core logging module only includes the basic handlers. If
 you don't import :mod:`logging.handlers` and :mod:`logging.config`, they won't
 take up any memory.
+
+.. _tutorial-ref-links:
+
+Other resources
+---------------
 
 .. seealso::
 

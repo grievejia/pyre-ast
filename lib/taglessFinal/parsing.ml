@@ -10,21 +10,21 @@ type raw_module
 external cpython_parse_module : string -> bool -> string -> raw_module = "cpython_parse_module"
 
 external cpython_convert_module :
-  (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _) Spec.t ->
+  (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 'module_, _, _, _, _, _, _, _) Spec.t ->
   raw_module ->
   'module_ = "cpython_convert_module"
 
 external cpython_parse_expression : string -> raw_module = "cpython_parse_expression"
 
 external cpython_convert_expression :
-  (_, _, _, _, _, _, _, _, 'expression, _, _, _, _, _, _, _, _, _, _, _, _, _, _) Spec.t ->
+  (_, _, _, _, _, _, _, _, 'expression, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) Spec.t ->
   raw_module ->
   'expression = "cpython_convert_expression"
 
 external cpython_parse_function_type : string -> raw_module = "cpython_parse_function_type"
 
 external cpython_convert_function_type :
-  (_, _, _, _, _, _, _, _, _, _, 'function_type, _, _, _, _, _, _, _, _, _, _, _, _) Spec.t ->
+  (_, _, _, _, _, _, _, _, _, _, 'function_type, _, _, _, _, _, _, _, _, _, _, _, _, _) Spec.t ->
   raw_module ->
   'function_type = "cpython_convert_function_type"
 

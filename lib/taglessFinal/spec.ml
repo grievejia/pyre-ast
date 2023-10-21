@@ -208,6 +208,16 @@ module ImportAlias = struct
     location:'location -> name:'identifier -> asname:'identifier option -> 'alias
 end
 
+module TypeParam = struct
+  type ('expr, 'identifier, 'location, 'type_param) t = {
+    type_var : location:'location -> name:'identifier -> bound:'expr option -> 'type_param;
+    param_spec : location:'location -> name:'identifier -> 'type_param;
+    type_var_tuple : location:'location -> name:'identifier -> 'type_param;
+  }
+
+  let make ~type_var ~param_spec ~type_var_tuple () = { type_var; param_spec; type_var_tuple }
+end
+
 module ExceptionHandler = struct
   type ('expr, 'identifier, 'location, 'stmt, 'except_handler) t =
     location:'location ->
@@ -269,6 +279,7 @@ module Statement = struct
          'keyword,
          'location,
          'match_case,
+         'type_param,
          'with_item,
          'stmt)
        t = {
@@ -280,6 +291,7 @@ module Statement = struct
       decorator_list:'expr list ->
       returns:'expr option ->
       type_comment:string option ->
+      type_params:'type_param list ->
       'stmt;
     async_function_def :
       location:'location ->
@@ -289,6 +301,7 @@ module Statement = struct
       decorator_list:'expr list ->
       returns:'expr option ->
       type_comment:string option ->
+      type_params:'type_param list ->
       'stmt;
     class_def :
       location:'location ->
@@ -297,11 +310,14 @@ module Statement = struct
       keywords:'keyword list ->
       body:'stmt list ->
       decorator_list:'expr list ->
+      type_params:'type_param list ->
       'stmt;
     return : location:'location -> value:'expr option -> 'stmt;
     delete : location:'location -> targets:'expr list -> 'stmt;
     assign :
       location:'location -> targets:'expr list -> value:'expr -> type_comment:string option -> 'stmt;
+    type_alias :
+      location:'location -> name:'expr -> type_params:'type_param list -> value:'expr -> 'stmt;
     aug_assign : location:'location -> target:'expr -> op:'bin_op -> value:'expr -> 'stmt;
     ann_assign :
       location:'location ->
@@ -368,9 +384,9 @@ module Statement = struct
     continue : location:'location -> 'stmt;
   }
 
-  let make ~function_def ~async_function_def ~class_def ~return ~delete ~assign ~aug_assign
-      ~ann_assign ~for_ ~async_for ~while_ ~if_ ~with_ ~async_with ~match_ ~raise_ ~try_ ~try_star
-      ~assert_ ~import ~import_from ~global ~nonlocal ~expr ~pass ~break ~continue () =
+  let make ~function_def ~async_function_def ~class_def ~return ~delete ~assign ~type_alias
+      ~aug_assign ~ann_assign ~for_ ~async_for ~while_ ~if_ ~with_ ~async_with ~match_ ~raise_ ~try_
+      ~try_star ~assert_ ~import ~import_from ~global ~nonlocal ~expr ~pass ~break ~continue () =
     {
       function_def;
       async_function_def;
@@ -378,6 +394,7 @@ module Statement = struct
       return;
       delete;
       assign;
+      type_alias;
       aug_assign;
       ann_assign;
       for_;
@@ -436,6 +453,7 @@ type ('argument,
        'position,
        'statement,
        'type_ignore,
+       'type_param,
        'unary_operator,
        'with_item)
      t = {
@@ -482,10 +500,12 @@ type ('argument,
       'keyword,
       'location,
       'match_case,
+      'type_param,
       'with_item,
       'statement )
     Statement.t;
   type_ignore : 'type_ignore TypeIgnore.t;
+  type_param : ('expression, 'identifier, 'location, 'type_param) TypeParam.t;
   unary_operator : 'unary_operator UnaryOperator.t;
   with_item : ('expression, 'with_item) WithItem.t;
 }
@@ -493,7 +513,7 @@ type ('argument,
 let make ~argument ~arguments ~binary_operator ~boolean_operator ~comparison_operator ~comprehension
     ~constant ~exception_handler ~expression ~expression_context ~function_type ~identifier
     ~import_alias ~keyword ~location ~match_case ~module_ ~pattern ~position ~statement ~type_ignore
-    ~unary_operator ~with_item () =
+    ~type_param ~unary_operator ~with_item () =
   {
     argument;
     arguments;
@@ -516,6 +536,7 @@ let make ~argument ~arguments ~binary_operator ~boolean_operator ~comparison_ope
     position;
     statement;
     type_ignore;
+    type_param;
     unary_operator;
     with_item;
   }

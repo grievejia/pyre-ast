@@ -77,7 +77,7 @@ static value PyUnicode_to_encoded_ocaml_string(PyObject *object) {
   CAMLreturn(result);
 }
 
-static const char* Dummy_filename = "<string>";
+static const char *Dummy_filename = "<string>";
 
 static PyStatus cpython_initialize(void) {
   PyPreConfig preconfig;
@@ -246,8 +246,9 @@ CAMLprim value finalize_python_runtime(void) {
 #define POSITION(v) Field(v, 18)
 #define STATEMENT(v) Field(v, 19)
 #define TYPE_IGNORE(v) Field(v, 20)
-#define UNARY_OPERATOR(v) Field(v, 21)
-#define WITH_ITEM(v) Field(v, 22)
+#define TYPE_PARAM(v) Field(v, 21)
+#define UNARY_OPERATOR(v) Field(v, 22)
+#define WITH_ITEM(v) Field(v, 23)
 
 #define CONSTANT_NONE(v) Field(CONSTANT(v), 0)
 #define CONSTANT_FALSE(v) Field(CONSTANT(v), 1)
@@ -325,6 +326,10 @@ CAMLprim value finalize_python_runtime(void) {
 #define EXPR_TUPLE(v) Field(EXPRESSION(v), 25)
 #define EXPR_SLICE(v) Field(EXPRESSION(v), 26)
 
+#define TYPE_PARAM_TYPEVAR(v) Field(TYPE_PARAM(v), 0)
+#define TYPE_PARAM_PARAMSPEC(v) Field(TYPE_PARAM(v), 1)
+#define TYPE_PARAM_TYPEVARTUPLE(v) Field(TYPE_PARAM(v), 2)
+
 #define PATTERN_MATCH_VALUE(v) Field(PATTERN(v), 0)
 #define PATTERN_MATCH_SINGLETON(v) Field(PATTERN(v), 1)
 #define PATTERN_MATCH_SEQUENCE(v) Field(PATTERN(v), 2)
@@ -340,27 +345,28 @@ CAMLprim value finalize_python_runtime(void) {
 #define STMT_RETURN(v) Field(STATEMENT(v), 3)
 #define STMT_DELETE(v) Field(STATEMENT(v), 4)
 #define STMT_ASSIGN(v) Field(STATEMENT(v), 5)
-#define STMT_AUG_ASSIGN(v) Field(STATEMENT(v), 6)
-#define STMT_ANN_ASSIGN(v) Field(STATEMENT(v), 7)
-#define STMT_FOR(v) Field(STATEMENT(v), 8)
-#define STMT_ASYNC_FOR(v) Field(STATEMENT(v), 9)
-#define STMT_WHILE(v) Field(STATEMENT(v), 10)
-#define STMT_IF(v) Field(STATEMENT(v), 11)
-#define STMT_WITH(v) Field(STATEMENT(v), 12)
-#define STMT_ASYNC_WITH(v) Field(STATEMENT(v), 13)
-#define STMT_MATCH(v) Field(STATEMENT(v), 14)
-#define STMT_RAISE(v) Field(STATEMENT(v), 15)
-#define STMT_TRY(v) Field(STATEMENT(v), 16)
-#define STMT_TRYSTAR(v) Field(STATEMENT(v), 17)
-#define STMT_ASSERT(v) Field(STATEMENT(v), 18)
-#define STMT_IMPORT(v) Field(STATEMENT(v), 19)
-#define STMT_IMPORT_FROM(v) Field(STATEMENT(v), 20)
-#define STMT_GLOBAL(v) Field(STATEMENT(v), 21)
-#define STMT_NONLOCAL(v) Field(STATEMENT(v), 22)
-#define STMT_EXPR(v) Field(STATEMENT(v), 23)
-#define STMT_PASS(v) Field(STATEMENT(v), 24)
-#define STMT_BREAK(v) Field(STATEMENT(v), 25)
-#define STMT_CONTINUE(v) Field(STATEMENT(v), 26)
+#define STMT_TYPE_ALIAS(v) Field(STATEMENT(v), 6)
+#define STMT_AUG_ASSIGN(v) Field(STATEMENT(v), 7)
+#define STMT_ANN_ASSIGN(v) Field(STATEMENT(v), 8)
+#define STMT_FOR(v) Field(STATEMENT(v), 9)
+#define STMT_ASYNC_FOR(v) Field(STATEMENT(v), 10)
+#define STMT_WHILE(v) Field(STATEMENT(v), 11)
+#define STMT_IF(v) Field(STATEMENT(v), 12)
+#define STMT_WITH(v) Field(STATEMENT(v), 13)
+#define STMT_ASYNC_WITH(v) Field(STATEMENT(v), 14)
+#define STMT_MATCH(v) Field(STATEMENT(v), 15)
+#define STMT_RAISE(v) Field(STATEMENT(v), 16)
+#define STMT_TRY(v) Field(STATEMENT(v), 17)
+#define STMT_TRYSTAR(v) Field(STATEMENT(v), 18)
+#define STMT_ASSERT(v) Field(STATEMENT(v), 19)
+#define STMT_IMPORT(v) Field(STATEMENT(v), 20)
+#define STMT_IMPORT_FROM(v) Field(STATEMENT(v), 21)
+#define STMT_GLOBAL(v) Field(STATEMENT(v), 22)
+#define STMT_NONLOCAL(v) Field(STATEMENT(v), 23)
+#define STMT_EXPR(v) Field(STATEMENT(v), 24)
+#define STMT_PASS(v) Field(STATEMENT(v), 25)
+#define STMT_BREAK(v) Field(STATEMENT(v), 26)
+#define STMT_CONTINUE(v) Field(STATEMENT(v), 27)
 
 // Forward delcarations
 CAMLprim value visit_expr(value visitor_value, expr_ty expr);
@@ -370,6 +376,9 @@ CAMLprim value visit_stmt(value visitor_value, stmt_ty stmt);
 CAMLprim value visit_stmts(value visitor_value, asdl_stmt_seq *stmts);
 CAMLprim value visit_pattern(value visitor_value, pattern_ty pattern);
 CAMLprim value visit_patterns(value visitor_value, asdl_pattern_seq *patterns);
+CAMLprim value visit_type_param(value visitor_value, type_param_ty type_param);
+CAMLprim value visit_type_params(value visitor_value,
+                                 asdl_type_param_seq *type_params);
 
 CAMLprim value visit_position(value visitor_value, int lineno, int col_offset) {
   CAMLparam1(visitor_value);
@@ -1320,6 +1329,91 @@ CAMLprim value visit_with_items(value visitor_value,
   CAMLreturn(result);
 }
 
+CAMLprim value visit_type_param_typevar(value visitor_value,
+                                        value location_value,
+                                        type_param_ty type_param) {
+  CAMLparam1(visitor_value);
+  CAMLlocal3(name_value, bound_value, result);
+
+  name_value = visit_identifier(visitor_value, type_param->v.TypeVar.name);
+  if (type_param->v.TypeVar.bound == NULL) {
+    bound_value = Val_none;
+  } else {
+    bound_value =
+        Val_some(visit_expr(visitor_value, type_param->v.TypeVar.bound));
+  }
+  result = caml_callback3(TYPE_PARAM_TYPEVAR(visitor_value), location_value,
+                          name_value, bound_value);
+  CAMLreturn(result);
+}
+
+CAMLprim value visit_type_param_paramspec(value visitor_value,
+                                          value location_value,
+                                          type_param_ty type_param) {
+  CAMLparam1(visitor_value);
+  CAMLlocal2(name_value, result);
+
+  name_value = visit_identifier(visitor_value, type_param->v.TypeVar.name);
+  result = caml_callback2(TYPE_PARAM_PARAMSPEC(visitor_value), location_value,
+                          name_value);
+  CAMLreturn(result);
+}
+
+CAMLprim value visit_type_param_typevartuple(value visitor_value,
+                                             value location_value,
+                                             type_param_ty type_param) {
+  CAMLparam1(visitor_value);
+  CAMLlocal2(name_value, result);
+
+  name_value = visit_identifier(visitor_value, type_param->v.TypeVar.name);
+  result = caml_callback2(TYPE_PARAM_TYPEVARTUPLE(visitor_value),
+                          location_value, name_value);
+  CAMLreturn(result);
+}
+
+CAMLprim value visit_type_param(value visitor_value, type_param_ty type_param) {
+  CAMLparam1(visitor_value);
+  CAMLlocal2(location_value, result);
+
+  location_value =
+      visit_location(visitor_value, type_param->lineno, type_param->col_offset,
+                     type_param->end_lineno, type_param->end_col_offset);
+  switch (type_param->kind) {
+  case TypeVar_kind:
+    result =
+        visit_type_param_typevar(visitor_value, location_value, type_param);
+    break;
+  case ParamSpec_kind:
+    result =
+        visit_type_param_paramspec(visitor_value, location_value, type_param);
+    break;
+  case TypeVarTuple_kind:
+    result = visit_type_param_typevartuple(visitor_value, location_value,
+                                           type_param);
+    break;
+  }
+
+  CAMLreturn(result);
+}
+
+CAMLprim value visit_type_params(value visitor_value,
+                                 asdl_type_param_seq *type_params) {
+  CAMLparam1(visitor_value);
+  CAMLlocal3(type_param_value, cons, result);
+
+  Py_ssize_t i, len = asdl_seq_LEN(type_params);
+  result = Val_emptylist;
+  for (i = len - 1; i >= 0; i--) {
+    type_param_ty type_param = asdl_seq_GET(type_params, i);
+    type_param_value = visit_type_param(visitor_value, type_param);
+    cons = caml_alloc(2, 0);
+    Store_field(cons, 0, type_param_value);
+    Store_field(cons, 1, result);
+    result = cons;
+  }
+  CAMLreturn(result);
+}
+
 CAMLprim value visit_except_handler(value visitor_value,
                                     excepthandler_ty except_handler) {
   CAMLparam1(visitor_value);
@@ -1602,7 +1696,7 @@ CAMLprim value visit_function_def_stmt(value visitor_value, stmt_ty stmt) {
   CAMLparam1(visitor_value);
   CAMLlocal5(location_value, name_value, args_value, body_value,
              decorator_list_value);
-  CAMLlocal3(returns_value, type_comment_value, result);
+  CAMLlocal4(returns_value, type_comment_value, type_params_value, result);
 
   location_value = visit_location(visitor_value, stmt->lineno, stmt->col_offset,
                                   stmt->end_lineno, stmt->end_col_offset);
@@ -1623,11 +1717,13 @@ CAMLprim value visit_function_def_stmt(value visitor_value, stmt_ty stmt) {
     type_comment_value =
         Val_some(PyUnicode_to_ocaml_string(stmt->v.FunctionDef.type_comment));
   }
+  type_params_value =
+      visit_type_params(visitor_value, stmt->v.FunctionDef.type_params);
 
-  value args[7] = {location_value,    name_value,           args_value,
-                   body_value,        decorator_list_value, returns_value,
-                   type_comment_value};
-  result = caml_callbackN(STMT_FUNCTION_DEF(visitor_value), 7, args);
+  value args[8] = {location_value,     name_value,           args_value,
+                   body_value,         decorator_list_value, returns_value,
+                   type_comment_value, type_params_value};
+  result = caml_callbackN(STMT_FUNCTION_DEF(visitor_value), 8, args);
 
   CAMLreturn(result);
 }
@@ -1637,7 +1733,7 @@ CAMLprim value visit_async_function_def_stmt(value visitor_value,
   CAMLparam1(visitor_value);
   CAMLlocal5(location_value, name_value, args_value, body_value,
              decorator_list_value);
-  CAMLlocal3(returns_value, type_comment_value, result);
+  CAMLlocal4(returns_value, type_comment_value, type_params_value, result);
 
   location_value = visit_location(visitor_value, stmt->lineno, stmt->col_offset,
                                   stmt->end_lineno, stmt->end_col_offset);
@@ -1658,11 +1754,13 @@ CAMLprim value visit_async_function_def_stmt(value visitor_value,
     type_comment_value = Val_some(caml_copy_string(
         PyUnicode_AsUTF8(stmt->v.AsyncFunctionDef.type_comment)));
   }
+  type_params_value =
+      visit_type_params(visitor_value, stmt->v.FunctionDef.type_params);
 
-  value args[7] = {location_value,    name_value,           args_value,
-                   body_value,        decorator_list_value, returns_value,
-                   type_comment_value};
-  result = caml_callbackN(STMT_ASYNC_FUNCTION_DEF(visitor_value), 7, args);
+  value args[8] = {location_value,     name_value,           args_value,
+                   body_value,         decorator_list_value, returns_value,
+                   type_comment_value, type_params_value};
+  result = caml_callbackN(STMT_FUNCTION_DEF(visitor_value), 8, args);
 
   CAMLreturn(result);
 }
@@ -1671,7 +1769,7 @@ CAMLprim value visit_class_def_stmt(value visitor_value, stmt_ty stmt) {
   CAMLparam1(visitor_value);
   CAMLlocal5(location_value, name_value, bases_value, keywords_value,
              body_value);
-  CAMLlocal2(decorator_list_value, result);
+  CAMLlocal3(decorator_list_value, type_params_value, result);
 
   location_value = visit_location(visitor_value, stmt->lineno, stmt->col_offset,
                                   stmt->end_lineno, stmt->end_col_offset);
@@ -1681,10 +1779,13 @@ CAMLprim value visit_class_def_stmt(value visitor_value, stmt_ty stmt) {
   body_value = visit_stmts(visitor_value, stmt->v.ClassDef.body);
   decorator_list_value =
       visit_exprs(visitor_value, stmt->v.ClassDef.decorator_list);
+  type_params_value =
+      visit_type_params(visitor_value, stmt->v.ClassDef.type_params);
 
-  value args[6] = {location_value, name_value, bases_value,
-                   keywords_value, body_value, decorator_list_value};
-  result = caml_callbackN(STMT_CLASS_DEF(visitor_value), 6, args);
+  value args[7] = {location_value,   name_value, bases_value,
+                   keywords_value,   body_value, decorator_list_value,
+                   type_params_value};
+  result = caml_callbackN(STMT_CLASS_DEF(visitor_value), 7, args);
 
   CAMLreturn(result);
 }
@@ -1738,6 +1839,24 @@ CAMLprim value visit_assign_stmt(value visitor_value, stmt_ty stmt) {
   value args[4] = {location_value, targets_value, value_value,
                    type_comment_value};
   result = caml_callbackN(STMT_ASSIGN(visitor_value), 4, args);
+
+  CAMLreturn(result);
+}
+
+CAMLprim value visit_type_alias_stmt(value visitor_value, stmt_ty stmt) {
+  CAMLparam1(visitor_value);
+  CAMLlocal5(location_value, name_value, type_params_value, value_value,
+             result);
+
+  location_value = visit_location(visitor_value, stmt->lineno, stmt->col_offset,
+                                  stmt->end_lineno, stmt->end_col_offset);
+  name_value = visit_expr(visitor_value, stmt->v.TypeAlias.name);
+  type_params_value =
+      visit_type_params(visitor_value, stmt->v.TypeAlias.type_params);
+  value_value = visit_expr(visitor_value, stmt->v.TypeAlias.value);
+
+  value args[4] = {location_value, name_value, type_params_value, value_value};
+  result = caml_callbackN(STMT_TYPE_ALIAS(visitor_value), 4, args);
 
   CAMLreturn(result);
 }
@@ -2169,6 +2288,9 @@ CAMLprim value visit_stmt(value visitor_value, stmt_ty stmt) {
   case Assign_kind:
     result = visit_assign_stmt(visitor_value, stmt);
     break;
+  case TypeAlias_kind:
+    result = visit_type_alias_stmt(visitor_value, stmt);
+    break;
   case AugAssign_kind:
     result = visit_aug_assign_stmt(visitor_value, stmt);
     break;
@@ -2413,8 +2535,7 @@ CAMLprim value cpython_parse_expression(value input_value) {
   }
 
   PyObject *filename = PyUnicode_FromString(Dummy_filename);
-  mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
-                                       filename,
+  mod_ty ast = _PyParser_ASTFromString(String_val(input_value), filename,
                                        Py_eval_input, NULL, arena);
   Py_DECREF(filename);
 
@@ -2450,8 +2571,7 @@ CAMLprim value cpython_parse_function_type(value input_value) {
   }
 
   PyObject *filename = PyUnicode_FromString(Dummy_filename);
-  mod_ty ast = _PyParser_ASTFromString(String_val(input_value),
-                                       filename,
+  mod_ty ast = _PyParser_ASTFromString(String_val(input_value), filename,
                                        Py_func_type_input, NULL, arena);
   Py_DECREF(filename);
 

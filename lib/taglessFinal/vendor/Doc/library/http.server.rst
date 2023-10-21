@@ -217,7 +217,7 @@ provides three different variants:
       attribute holds the default values for *message* and *explain* that
       will be used if no value is provided; for unknown codes the default value
       for both is the string ``???``. The body will be empty if the method is
-      HEAD or the response code is one of the following: ``1xx``,
+      HEAD or the response code is one of the following: :samp:`1{xx}`,
       ``204 No Content``, ``205 Reset Content``, ``304 Not Modified``.
 
       .. versionchanged:: 3.4
@@ -413,6 +413,11 @@ the current directory::
        print("serving at port", PORT)
        httpd.serve_forever()
 
+
+:class:`SimpleHTTPRequestHandler` can also be subclassed to enhance behavior,
+such as using different index file names by overriding the class attribute
+:attr:`index_pages`.
+
 .. _http-server-cli:
 
 :mod:`http.server` can also be invoked directly using the :option:`-m`
@@ -512,3 +517,12 @@ Security Considerations
 :class:`SimpleHTTPRequestHandler` will follow symbolic links when handling
 requests, this makes it possible for files outside of the specified directory
 to be served.
+
+Earlier versions of Python did not scrub control characters from the
+log messages emitted to stderr from ``python -m http.server`` or the
+default :class:`BaseHTTPRequestHandler` ``.log_message``
+implementation. This could allow remote clients connecting to your
+server to send nefarious control codes to your terminal.
+
+.. versionadded:: 3.12
+   Control characters are scrubbed in stderr logs.

@@ -5,7 +5,6 @@ __all__ = (
 import collections
 import socket
 import sys
-import warnings
 import weakref
 
 if hasattr(socket, 'AF_UNIX'):
@@ -126,7 +125,7 @@ class FlowControlMixin(protocols.Protocol):
 
     def __init__(self, loop=None):
         if loop is None:
-            self._loop = events._get_event_loop(stacklevel=4)
+            self._loop = events.get_event_loop()
         else:
             self._loop = loop
         self._paused = False
@@ -379,7 +378,8 @@ class StreamWriter:
 
     async def start_tls(self, sslcontext, *,
                         server_hostname=None,
-                        ssl_handshake_timeout=None):
+                        ssl_handshake_timeout=None,
+                        ssl_shutdown_timeout=None):
         """Upgrade an existing stream-based connection to TLS."""
         server_side = self._protocol._client_connected_cb is not None
         protocol = self._protocol
@@ -387,9 +387,14 @@ class StreamWriter:
         new_transport = await self._loop.start_tls(  # type: ignore
             self._transport, protocol, sslcontext,
             server_side=server_side, server_hostname=server_hostname,
-            ssl_handshake_timeout=ssl_handshake_timeout)
+            ssl_handshake_timeout=ssl_handshake_timeout,
+            ssl_shutdown_timeout=ssl_shutdown_timeout)
         self._transport = new_transport
         protocol._replace_writer(self)
+
+    def __del__(self):
+        if not self._transport.is_closing():
+            self.close()
 
 
 class StreamReader:
@@ -405,7 +410,7 @@ class StreamReader:
 
         self._limit = limit
         if loop is None:
-            self._loop = events._get_event_loop()
+            self._loop = events.get_event_loop()
         else:
             self._loop = loop
         self._buffer = bytearray()
@@ -648,16 +653,17 @@ class StreamReader:
     async def read(self, n=-1):
         """Read up to `n` bytes from the stream.
 
-        If n is not provided, or set to -1, read until EOF and return all read
-        bytes. If the EOF was received and the internal buffer is empty, return
-        an empty bytes object.
+        If `n` is not provided or set to -1,
+        read until EOF, then return all read bytes.
+        If EOF was received and the internal buffer is empty,
+        return an empty bytes object.
 
-        If n is zero, return empty bytes object immediately.
+        If `n` is 0, return an empty bytes object immediately.
 
-        If n is positive, this function try to read `n` bytes, and may return
-        less or equal bytes than requested, but at least one byte. If EOF was
-        received before any byte is read, this function returns empty byte
-        object.
+        If `n` is positive, return at most `n` available bytes
+        as soon as at least 1 byte is available in the internal buffer.
+        If EOF is received before any byte is read, return an empty
+        bytes object.
 
         Returned value is not limited with limit, configured at stream
         creation.
@@ -689,7 +695,7 @@ class StreamReader:
             await self._wait_for_data('read')
 
         # This will work right even if buffer is less than n bytes
-        data = bytes(self._buffer[:n])
+        data = bytes(memoryview(self._buffer)[:n])
         del self._buffer[:n]
 
         self._maybe_resume_transport()
@@ -731,7 +737,7 @@ class StreamReader:
             data = bytes(self._buffer)
             self._buffer.clear()
         else:
-            data = bytes(self._buffer[:n])
+            data = bytes(memoryview(self._buffer)[:n])
             del self._buffer[:n]
         self._maybe_resume_transport()
         return data

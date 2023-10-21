@@ -28,8 +28,8 @@ The :mod:`urllib.request` module defines the following functions:
 
 .. function:: urlopen(url, data=None[, timeout], *, cafile=None, capath=None, cadefault=False, context=None)
 
-   Open the URL *url*, which can be either a string or a
-   :class:`Request` object.
+   Open *url*, which can be either a string containing a valid, properly
+   encoded URL, or a :class:`Request` object.
 
    *data* must be an object specifying additional data to be sent to the
    server, or ``None`` if no such data is needed.  See :class:`Request`
@@ -99,7 +99,7 @@ The :mod:`urllib.request` module defines the following functions:
 
    .. versionchanged:: 3.2
       HTTPS virtual hosts are now supported if possible (that is, if
-      :data:`ssl.HAS_SNI` is true).
+      :const:`ssl.HAS_SNI` is true).
 
    .. versionadded:: 3.2
       *data* can be an iterable object.
@@ -192,7 +192,7 @@ The following classes are provided:
 
    This class is an abstraction of a URL request.
 
-   *url* should be a string containing a valid URL.
+   *url* should be a string containing a valid, properly encoded URL.
 
    *data* must be an object specifying additional data to send to the
    server, or ``None`` if no such data is needed.  Currently HTTP
@@ -1630,7 +1630,7 @@ The typical response object is a :class:`urllib.response.addinfourl` instance:
       .. deprecated:: 3.9
          Deprecated in favor of :attr:`~addinfourl.status`.
 
-   .. method:: getstatus()
+   .. method:: getcode()
 
       .. deprecated:: 3.9
          Deprecated in favor of :attr:`~addinfourl.status`.

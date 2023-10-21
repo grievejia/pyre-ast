@@ -43,6 +43,7 @@ Unicode surrogate should not crash the parser
 
 Unicode escape sequence "\N" is not supported
   $ echo '"\N{HORIZONTAL ELLIPSIS}"' | parse module -
+  <unknown>:1: SyntaxWarning: invalid escape sequence '\N'
   ((body
     ((Expr
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 25)))))

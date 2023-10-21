@@ -9,17 +9,15 @@ backwards compatibility. They have been superseded by other modules.
 
 
 .. toctree::
+   :maxdepth: 1
 
    aifc.rst
-   asynchat.rst
-   asyncore.rst
    audioop.rst
    cgi.rst
    cgitb.rst
    chunk.rst
    crypt.rst
    imghdr.rst
-   imp.rst
    mailcap.rst
    msilib.rst
    nis.rst
@@ -27,7 +25,6 @@ backwards compatibility. They have been superseded by other modules.
    optparse.rst
    ossaudiodev.rst
    pipes.rst
-   smtpd.rst
    sndhdr.rst
    spwd.rst
    sunau.rst

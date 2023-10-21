@@ -273,6 +273,14 @@ module WithItem = struct
   [@@deriving sexp, compare, hash, make]
 end
 
+module TypeParam = struct
+  type t =
+    | TypeVar of { location : Location.t; name : Identifier.t; bound : Expression.t option }
+    | ParamSpec of { location : Location.t; name : Identifier.t }
+    | TypeVarTuple of { location : Location.t; name : Identifier.t }
+  [@@deriving sexp, compare, hash, make]
+end
+
 module rec ExceptionHandler : sig
   type t = {
     location : Location.t;
@@ -355,6 +363,7 @@ and Statement : sig
         decorator_list : Expression.t list;
         returns : Expression.t option;
         type_comment : string option;
+        type_params : TypeParam.t list;
       }
     | AsyncFunctionDef of {
         location : Location.t;
@@ -364,6 +373,7 @@ and Statement : sig
         decorator_list : Expression.t list;
         returns : Expression.t option;
         type_comment : string option;
+        type_params : TypeParam.t list;
       }
     | ClassDef of {
         location : Location.t;
@@ -372,6 +382,7 @@ and Statement : sig
         keywords : Keyword.t list;
         body : t list;
         decorator_list : Expression.t list;
+        type_params : TypeParam.t list;
       }
     | Return of { location : Location.t; value : Expression.t option }
     | Delete of { location : Location.t; targets : Expression.t list }
@@ -380,6 +391,12 @@ and Statement : sig
         targets : Expression.t list;
         value : Expression.t;
         type_comment : string option;
+      }
+    | TypeAlias of {
+        location : Location.t;
+        name : Expression.t;
+        type_params : TypeParam.t list;
+        value : Expression.t;
       }
     | AugAssign of {
         location : Location.t;
@@ -465,6 +482,7 @@ end = struct
         decorator_list : Expression.t list;
         returns : Expression.t option;
         type_comment : string option;
+        type_params : TypeParam.t list;
       }
     | AsyncFunctionDef of {
         location : Location.t;
@@ -474,6 +492,7 @@ end = struct
         decorator_list : Expression.t list;
         returns : Expression.t option;
         type_comment : string option;
+        type_params : TypeParam.t list;
       }
     | ClassDef of {
         location : Location.t;
@@ -482,6 +501,7 @@ end = struct
         keywords : Keyword.t list;
         body : t list;
         decorator_list : Expression.t list;
+        type_params : TypeParam.t list;
       }
     | Return of { location : Location.t; value : Expression.t option }
     | Delete of { location : Location.t; targets : Expression.t list }
@@ -490,6 +510,12 @@ end = struct
         targets : Expression.t list;
         value : Expression.t;
         type_comment : string option;
+      }
+    | TypeAlias of {
+        location : Location.t;
+        name : Expression.t;
+        type_params : TypeParam.t list;
+        value : Expression.t;
       }
     | AugAssign of {
         location : Location.t;
@@ -674,6 +700,14 @@ module MakeTaglessFinal = struct
   let module_ ~body ~type_ignores = Module.make_t ~body ~type_ignores ()
   let function_type ~argtypes ~returns = FunctionType.make_t ~argtypes ~returns ()
 
+  let type_param =
+    let open TypeParam in
+    TaglessFinal.TypeParam.make
+      ~type_var:(fun ~location ~name ~bound -> make_typevar_of_t ~location ~name ?bound ())
+      ~param_spec:(fun ~location ~name -> make_paramspec_of_t ~location ~name ())
+      ~type_var_tuple:(fun ~location ~name -> make_typevartuple_of_t ~location ~name ())
+      ()
+
   let pattern =
     let open Pattern in
     TaglessFinal.Pattern.make
@@ -694,17 +728,22 @@ module MakeTaglessFinal = struct
   let statement =
     let open Statement in
     TaglessFinal.Statement.make
-      ~function_def:(fun ~location ~name ~args ~body ~decorator_list ~returns ~type_comment ->
-        make_functiondef_of_t ~location ~name ~args ~body ~decorator_list ?returns ?type_comment ())
-      ~async_function_def:(fun ~location ~name ~args ~body ~decorator_list ~returns ~type_comment ->
+      ~function_def:(fun
+          ~location ~name ~args ~body ~decorator_list ~returns ~type_comment ~type_params ->
+        make_functiondef_of_t ~location ~name ~args ~body ~decorator_list ?returns ?type_comment
+          ~type_params ())
+      ~async_function_def:(fun
+          ~location ~name ~args ~body ~decorator_list ~returns ~type_comment ~type_params ->
         make_asyncfunctiondef_of_t ~location ~name ~args ~body ~decorator_list ?returns
-          ?type_comment ())
-      ~class_def:(fun ~location ~name ~bases ~keywords ~body ~decorator_list ->
-        make_classdef_of_t ~location ~name ~bases ~keywords ~body ~decorator_list ())
+          ?type_comment ~type_params ())
+      ~class_def:(fun ~location ~name ~bases ~keywords ~body ~decorator_list ~type_params ->
+        make_classdef_of_t ~location ~name ~bases ~keywords ~body ~decorator_list ~type_params ())
       ~return:(fun ~location ~value -> make_return_of_t ~location ?value ())
       ~delete:(fun ~location ~targets -> make_delete_of_t ~location ~targets ())
       ~assign:(fun ~location ~targets ~value ~type_comment ->
         make_assign_of_t ~location ~targets ~value ?type_comment ())
+      ~type_alias:(fun ~location ~name ~type_params ~value ->
+        make_typealias_of_t ~location ~name ~type_params ~value ())
       ~aug_assign:(fun ~location ~target ~op ~value ->
         make_augassign_of_t ~location ~target ~op ~value ())
       ~ann_assign:(fun ~location ~target ~annotation ~value ~simple ->
@@ -753,4 +792,4 @@ let make_tagless_final =
   TaglessFinal.make ~argument ~arguments ~binary_operator ~boolean_operator ~comparison_operator
     ~comprehension ~constant ~exception_handler ~expression ~expression_context ~function_type
     ~identifier ~import_alias ~keyword ~location ~match_case ~module_ ~pattern ~position ~statement
-    ~type_ignore ~unary_operator ~with_item
+    ~type_ignore ~type_param ~unary_operator ~with_item

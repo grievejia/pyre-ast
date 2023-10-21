@@ -11,7 +11,7 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 11))) (stop ((line 1) (column 15))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ echo "def foo(x, *args, **kwargs): pass" | parse module -
   ((body
@@ -38,7 +38,7 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 29))) (stop ((line 1) (column 33))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ echo "def foo(x, /, y, *, z, **kwargs): pass" | parse module -
   ((body
@@ -69,7 +69,7 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 34))) (stop ((line 1) (column 38))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ echo "def foo(x = 1, /, y = 2, *, z = 3): pass" | parse module -
   ((body
@@ -109,7 +109,7 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 36))) (stop ((line 1) (column 40))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ echo "def foo(x, /, y, z = 2, *, u = 3, v): pass" | parse module -
   ((body
@@ -152,7 +152,7 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 38))) (stop ((line 1) (column 42))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ parse module function_def_with_decorator
   ((body
@@ -189,7 +189,7 @@ Test function def stmt
              ((start ((line 2) (column 10))) (stop ((line 2) (column 12)))))
             (value (Integer 42)) (kind ()))))
          (keywords ()))))
-      (returns ()) (type_comment ()))))
+      (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
   $ echo "def foo(x: int, y: int) -> int: pass" | parse module -
   ((body
@@ -228,7 +228,111 @@ Test function def stmt
          (location
           ((start ((line 1) (column 27))) (stop ((line 1) (column 30)))))
          (id int) (ctx Load))))
-      (type_comment ()))))
+      (type_comment ()) (type_params ()))))
+   (type_ignores ()))
+  $ echo "def foo[]() -> T: pass" | parse module -
+  Parse error at line 1, column 8 to line 1, column 9: expected '('
+  $ echo "def foo[T: int]() -> T: pass" | parse module -
+  ((body
+    ((FunctionDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 28)))))
+      (name foo)
+      (args
+       ((posonlyargs ()) (args ()) (vararg ()) (kwonlyargs ()) (kw_defaults ())
+        (kwarg ()) (defaults ())))
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 24))) (stop ((line 1) (column 28))))))))
+      (decorator_list ())
+      (returns
+       ((Name
+         (location
+          ((start ((line 1) (column 21))) (stop ((line 1) (column 22)))))
+         (id T) (ctx Load))))
+      (type_comment ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 8))) (stop ((line 1) (column 14)))))
+         (name T)
+         (bound
+          ((Name
+            (location
+             ((start ((line 1) (column 11))) (stop ((line 1) (column 14)))))
+            (id int) (ctx Load))))))))))
+   (type_ignores ()))
+  $ echo "def foo[T, U: (str, int)]() -> T: pass" | parse module -
+  ((body
+    ((FunctionDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 38)))))
+      (name foo)
+      (args
+       ((posonlyargs ()) (args ()) (vararg ()) (kwonlyargs ()) (kw_defaults ())
+        (kwarg ()) (defaults ())))
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 34))) (stop ((line 1) (column 38))))))))
+      (decorator_list ())
+      (returns
+       ((Name
+         (location
+          ((start ((line 1) (column 31))) (stop ((line 1) (column 32)))))
+         (id T) (ctx Load))))
+      (type_comment ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 8))) (stop ((line 1) (column 9)))))
+         (name T) (bound ()))
+        (TypeVar
+         (location
+          ((start ((line 1) (column 11))) (stop ((line 1) (column 24)))))
+         (name U)
+         (bound
+          ((Tuple
+            (location
+             ((start ((line 1) (column 14))) (stop ((line 1) (column 24)))))
+            (elts
+             ((Name
+               (location
+                ((start ((line 1) (column 15))) (stop ((line 1) (column 18)))))
+               (id str) (ctx Load))
+              (Name
+               (location
+                ((start ((line 1) (column 20))) (stop ((line 1) (column 23)))))
+               (id int) (ctx Load))))
+            (ctx Load))))))))))
+   (type_ignores ()))
+  $ echo "def foo[*T, **P]() -> T: pass" | parse module -
+  ((body
+    ((FunctionDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 29)))))
+      (name foo)
+      (args
+       ((posonlyargs ()) (args ()) (vararg ()) (kwonlyargs ()) (kw_defaults ())
+        (kwarg ()) (defaults ())))
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 25))) (stop ((line 1) (column 29))))))))
+      (decorator_list ())
+      (returns
+       ((Name
+         (location
+          ((start ((line 1) (column 22))) (stop ((line 1) (column 23)))))
+         (id T) (ctx Load))))
+      (type_comment ())
+      (type_params
+       ((TypeVarTuple
+         (location
+          ((start ((line 1) (column 8))) (stop ((line 1) (column 10)))))
+         (name T))
+        (ParamSpec
+         (location
+          ((start ((line 1) (column 12))) (stop ((line 1) (column 15)))))
+         (name P)))))))
    (type_ignores ()))
   $ parse module --enable-type-comment function_def_with_type_comment
   ((body
@@ -251,7 +355,8 @@ Test function def stmt
            (location
             ((start ((line 2) (column 2))) (stop ((line 2) (column 5)))))
            (value Ellipsis) (kind ()))))))
-      (decorator_list ()) (returns ()) (type_comment ("(int) -> int")))))
+      (decorator_list ()) (returns ()) (type_comment ("(int) -> int"))
+      (type_params ()))))
    (type_ignores ()))
   $ parse module --enable-type-comment param_type_comment
   ((body
@@ -296,7 +401,8 @@ Test function def stmt
        ((Pass
          (location
           ((start ((line 9) (column 4))) (stop ((line 9) (column 8))))))))
-      (decorator_list ()) (returns ()) (type_comment ("(...) -> bool")))))
+      (decorator_list ()) (returns ()) (type_comment ("(...) -> bool"))
+      (type_params ()))))
    (type_ignores ()))
   $ parse module function_def_multiline
   ((body
@@ -323,13 +429,13 @@ Test function def stmt
            (location
             ((start ((line 3) (column 2))) (stop ((line 3) (column 3)))))
            (id y) (ctx Load))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
 
 Test async function def stmt
   $ echo "async def foo(x: int, y: bool = False): pass" | parse module -
   ((body
-    ((AsyncFunctionDef
+    ((FunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 44)))))
       (name foo)
       (args
@@ -363,7 +469,7 @@ Test async function def stmt
        ((Pass
          (location
           ((start ((line 1) (column 40))) (stop ((line 1) (column 44))))))))
-      (decorator_list ()) (returns ()) (type_comment ()))))
+      (decorator_list ()) (returns ()) (type_comment ()) (type_params ()))))
    (type_ignores ()))
 
 Test class def stmt
@@ -376,7 +482,7 @@ Test class def stmt
        ((Pass
          (location
           ((start ((line 1) (column 11))) (stop ((line 1) (column 15))))))))
-      (decorator_list ()))))
+      (decorator_list ()) (type_params ()))))
    (type_ignores ()))
   $ echo "class Foo(Bar, Baz, metaclass=FooMeta): pass" | parse module -
   ((body
@@ -405,7 +511,7 @@ Test class def stmt
        ((Pass
          (location
           ((start ((line 1) (column 40))) (stop ((line 1) (column 44))))))))
-      (decorator_list ()))))
+      (decorator_list ()) (type_params ()))))
    (type_ignores ()))
   $ parse module class_def_with_method
   ((body
@@ -440,8 +546,8 @@ Test class def stmt
             (location
              ((start ((line 2) (column 19))) (stop ((line 2) (column 22)))))
             (id int) (ctx Load))))
-         (type_comment ()))))
-      (decorator_list ()))))
+         (type_comment ()) (type_params ()))))
+      (decorator_list ()) (type_params ()))))
    (type_ignores ()))
   $ parse module class_def_with_decorator
   ((body
@@ -474,7 +580,120 @@ Test class def stmt
             (location
              ((start ((line 2) (column 10))) (stop ((line 2) (column 12)))))
             (value (Integer 42)) (kind ()))))
-         (keywords ())))))))
+         (keywords ()))))
+      (type_params ()))))
+   (type_ignores ()))
+  $ echo "class ChildClass[T, *Ts, **P]: pass" | parse module -
+  ((body
+    ((ClassDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 35)))))
+      (name ChildClass) (bases ()) (keywords ())
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 31))) (stop ((line 1) (column 35))))))))
+      (decorator_list ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 17))) (stop ((line 1) (column 18)))))
+         (name T) (bound ()))
+        (TypeVarTuple
+         (location
+          ((start ((line 1) (column 20))) (stop ((line 1) (column 23)))))
+         (name Ts))
+        (ParamSpec
+         (location
+          ((start ((line 1) (column 25))) (stop ((line 1) (column 28)))))
+         (name P)))))))
+   (type_ignores ()))
+  $ echo "class ClassA[S, T](Protocol): pass" | parse module -
+  ((body
+    ((ClassDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 34)))))
+      (name ClassA)
+      (bases
+       ((Name
+         (location
+          ((start ((line 1) (column 19))) (stop ((line 1) (column 27)))))
+         (id Protocol) (ctx Load))))
+      (keywords ())
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 30))) (stop ((line 1) (column 34))))))))
+      (decorator_list ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 13))) (stop ((line 1) (column 14)))))
+         (name S) (bound ()))
+        (TypeVar
+         (location
+          ((start ((line 1) (column 16))) (stop ((line 1) (column 17)))))
+         (name T) (bound ())))))))
+   (type_ignores ()))
+  $ echo "class ClassA[T: dict[str, int]]: pass" | parse module -
+  ((body
+    ((ClassDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 37)))))
+      (name ClassA) (bases ()) (keywords ())
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 33))) (stop ((line 1) (column 37))))))))
+      (decorator_list ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 13))) (stop ((line 1) (column 30)))))
+         (name T)
+         (bound
+          ((Subscript
+            (location
+             ((start ((line 1) (column 16))) (stop ((line 1) (column 30)))))
+            (value
+             (Name
+              (location
+               ((start ((line 1) (column 16))) (stop ((line 1) (column 20)))))
+              (id dict) (ctx Load)))
+            (slice
+             (Tuple
+              (location
+               ((start ((line 1) (column 21))) (stop ((line 1) (column 29)))))
+              (elts
+               ((Name
+                 (location
+                  ((start ((line 1) (column 21)))
+                   (stop ((line 1) (column 24)))))
+                 (id str) (ctx Load))
+                (Name
+                 (location
+                  ((start ((line 1) (column 26)))
+                   (stop ((line 1) (column 29)))))
+                 (id int) (ctx Load))))
+              (ctx Load)))
+            (ctx Load))))))))))
+   (type_ignores ()))
+  $ echo "class ClassA[T, *T]: pass" | parse module -
+  ((body
+    ((ClassDef
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 25)))))
+      (name ClassA) (bases ()) (keywords ())
+      (body
+       ((Pass
+         (location
+          ((start ((line 1) (column 21))) (stop ((line 1) (column 25))))))))
+      (decorator_list ())
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 13))) (stop ((line 1) (column 14)))))
+         (name T) (bound ()))
+        (TypeVarTuple
+         (location
+          ((start ((line 1) (column 16))) (stop ((line 1) (column 18)))))
+         (name T)))))))
    (type_ignores ()))
 
 Test return stmt
@@ -535,6 +754,162 @@ Test delete stmt
            (value (Integer 0)) (kind ())))
          (ctx Del)))))))
    (type_ignores ()))
+
+Test type alias stmt
+  $ echo 'type IntOrStr = int | str' | parse module -
+  ((body
+    ((TypeAlias
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 25)))))
+      (name
+       (Name
+        (location
+         ((start ((line 1) (column 5))) (stop ((line 1) (column 13)))))
+        (id IntOrStr) (ctx Store)))
+      (type_params ())
+      (value
+       (BinOp
+        (location
+         ((start ((line 1) (column 16))) (stop ((line 1) (column 25)))))
+        (left
+         (Name
+          (location
+           ((start ((line 1) (column 16))) (stop ((line 1) (column 19)))))
+          (id int) (ctx Load)))
+        (op BitOr)
+        (right
+         (Name
+          (location
+           ((start ((line 1) (column 22))) (stop ((line 1) (column 25)))))
+          (id str) (ctx Load))))))))
+   (type_ignores ()))
+  $ echo 'type ListOrSet[T] = list[T] | set[T]' | parse module -
+  ((body
+    ((TypeAlias
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 36)))))
+      (name
+       (Name
+        (location
+         ((start ((line 1) (column 5))) (stop ((line 1) (column 14)))))
+        (id ListOrSet) (ctx Store)))
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 15))) (stop ((line 1) (column 16)))))
+         (name T) (bound ()))))
+      (value
+       (BinOp
+        (location
+         ((start ((line 1) (column 20))) (stop ((line 1) (column 36)))))
+        (left
+         (Subscript
+          (location
+           ((start ((line 1) (column 20))) (stop ((line 1) (column 27)))))
+          (value
+           (Name
+            (location
+             ((start ((line 1) (column 20))) (stop ((line 1) (column 24)))))
+            (id list) (ctx Load)))
+          (slice
+           (Name
+            (location
+             ((start ((line 1) (column 25))) (stop ((line 1) (column 26)))))
+            (id T) (ctx Load)))
+          (ctx Load)))
+        (op BitOr)
+        (right
+         (Subscript
+          (location
+           ((start ((line 1) (column 30))) (stop ((line 1) (column 36)))))
+          (value
+           (Name
+            (location
+             ((start ((line 1) (column 30))) (stop ((line 1) (column 33)))))
+            (id set) (ctx Load)))
+          (slice
+           (Name
+            (location
+             ((start ((line 1) (column 34))) (stop ((line 1) (column 35)))))
+            (id T) (ctx Load)))
+          (ctx Load))))))))
+   (type_ignores ()))
+  $ echo 'type AnimalOrVegetable = Animal | "Vegetable"' | parse module -
+  ((body
+    ((TypeAlias
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 45)))))
+      (name
+       (Name
+        (location
+         ((start ((line 1) (column 5))) (stop ((line 1) (column 22)))))
+        (id AnimalOrVegetable) (ctx Store)))
+      (type_params ())
+      (value
+       (BinOp
+        (location
+         ((start ((line 1) (column 25))) (stop ((line 1) (column 45)))))
+        (left
+         (Name
+          (location
+           ((start ((line 1) (column 25))) (stop ((line 1) (column 31)))))
+          (id Animal) (ctx Load)))
+        (op BitOr)
+        (right
+         (Constant
+          (location
+           ((start ((line 1) (column 34))) (stop ((line 1) (column 45)))))
+          (value (String Vegetable)) (kind ()))))))))
+   (type_ignores ()))
+  $ echo 'type RecursiveList[T] = T | list[RecursiveList[T]]' | parse module -
+  ((body
+    ((TypeAlias
+      (location ((start ((line 1) (column 0))) (stop ((line 1) (column 50)))))
+      (name
+       (Name
+        (location
+         ((start ((line 1) (column 5))) (stop ((line 1) (column 18)))))
+        (id RecursiveList) (ctx Store)))
+      (type_params
+       ((TypeVar
+         (location
+          ((start ((line 1) (column 19))) (stop ((line 1) (column 20)))))
+         (name T) (bound ()))))
+      (value
+       (BinOp
+        (location
+         ((start ((line 1) (column 24))) (stop ((line 1) (column 50)))))
+        (left
+         (Name
+          (location
+           ((start ((line 1) (column 24))) (stop ((line 1) (column 25)))))
+          (id T) (ctx Load)))
+        (op BitOr)
+        (right
+         (Subscript
+          (location
+           ((start ((line 1) (column 28))) (stop ((line 1) (column 50)))))
+          (value
+           (Name
+            (location
+             ((start ((line 1) (column 28))) (stop ((line 1) (column 32)))))
+            (id list) (ctx Load)))
+          (slice
+           (Subscript
+            (location
+             ((start ((line 1) (column 33))) (stop ((line 1) (column 49)))))
+            (value
+             (Name
+              (location
+               ((start ((line 1) (column 33))) (stop ((line 1) (column 46)))))
+              (id RecursiveList) (ctx Load)))
+            (slice
+             (Name
+              (location
+               ((start ((line 1) (column 47))) (stop ((line 1) (column 48)))))
+              (id T) (ctx Load)))
+            (ctx Load)))
+          (ctx Load))))))))
+   (type_ignores ()))
+  $ echo "type x.y = int" | parse module -
+  Parse error at line 1, column 7 to line 1, column 8: invalid syntax
 
 Test assign stmt
   $ echo "x = 42" | parse module -
@@ -1426,7 +1801,7 @@ Test try star stmt
 
 Test mixing try and try star
   $ parse module mix_try_and_try_star
-  Parse error at line 6, column 9 to line 6, column -1: cannot have both 'except' and 'except*' on the same 'try'
+  Parse error at line 5, column 1 to line 5, column 8: cannot have both 'except' and 'except*' on the same 'try'
 
 Test wildcard try star
   $ parse module wildcard_try_star
