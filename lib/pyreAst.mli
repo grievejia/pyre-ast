@@ -134,10 +134,10 @@
 
     The main type this module offers, {!type: TaglessFinal.t}, works just like the [expression] type
     appeared in the above example: it is nothing more than a collection of free functions on which
-    downstream syntax processors can be defined. Once it is constructed with {!val:
-    TaglessFinal.make}, one can then pass it onto various paring APIs in {!module:
-    Parser.TaglessFinal}, which serves simliar purpose as the [construct_and_eval] function in our
-    running example.
+    downstream syntax processors can be defined. Once it is constructed with
+    {!val:TaglessFinal.make}, one can then pass it onto various paring APIs in
+    {!module:Parser.TaglessFinal}, which serves simliar purpose as the [construct_and_eval] function
+    in our running example.
 
     Keeping the structure of {!type: TaglessFinal.t} fully authentic to Python's official
     {{:https://docs.python.org/3.11/library/ast.html} [ast]} module is an explicit design goal for
@@ -199,9 +199,10 @@ module TaglessFinal : sig
 
               At OCaml level, the value of the string literal is a UTF-8 decoded byte array of the
               original string literal in Python. If the original literal cannot be UTF-8 decoded,
-              the {{:https://docs.python.org/3/library/codecs.html#error-handlers}
-              [backslahreplace]} error handler is used, which replaces the un-decodable parts with
-              backslashed escape sequence.
+              the
+              {{:https://docs.python.org/3/library/codecs.html#error-handlers} [backslahreplace]}
+              error handler is used, which replaces the un-decodable parts with backslashed escape
+              sequence.
 
               Note that due to technical limitations, \N escape sequence translation is not
               supported: String literal "\N\{FOO\}" will be treated as an ascii string of length 7
@@ -361,7 +362,7 @@ module TaglessFinal : sig
       Example: [... async for x, y in z if x > 0 if y < 0]
 
       In this case, [target] will be [(x, y)], [iter] will be [z], [ifs] will be a list
-      [\[x>0, y<0\]], and [is_async] will be [true]. *)
+      [[x>0, y<0]], and [is_async] will be [true]. *)
   module Comprehension : sig
     type ('expr, 'comprehension) t =
       target:'expr -> iter:'expr -> ifs:'expr list -> is_async:bool -> 'comprehension
@@ -480,7 +481,8 @@ def foo(
            'location,
            'unary_op,
            'expr)
-         t = private {
+         t =
+      private {
       bool_op : location:'location -> op:'bool_op -> values:'expr list -> 'expr;
           (** Represents a boolean expression.
 
@@ -501,13 +503,13 @@ def foo(
 
               - Example: [not a] *)
       lambda : location:'location -> args:'arguments -> body:'expr -> 'expr;
-          (** Represents a lambda expression. See {{:https://www.python.org/dev/peps/pep-0312/} PEP
-              312}.
+          (** Represents a lambda expression. See
+              {{:https://www.python.org/dev/peps/pep-0312/} PEP 312}.
 
               - Example: [lambda x, /, y, *, z: x + y + z] *)
       if_exp : location:'location -> test:'expr -> body:'expr -> orelse:'expr -> 'expr;
-          (** Represents a conditional expression. See {{:https://www.python.org/dev/peps/pep-0308/}
-              PEP 308}.
+          (** Represents a conditional expression. See
+              {{:https://www.python.org/dev/peps/pep-0308/} PEP 308}.
 
               - Example: [x if x > 0 else None] *)
       dict : location:'location -> keys:'expr option list -> values:'expr list -> 'expr;
@@ -522,28 +524,28 @@ def foo(
 
               - Example: [{ "a", "b" }] *)
       list_comp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a list comprehension. See {{:https://www.python.org/dev/peps/pep-0202/} PEP
-              202}.
+          (** Represents a list comprehension. See
+              {{:https://www.python.org/dev/peps/pep-0202/} PEP 202}.
 
-              - Example: [\[y for x in l if len(x) > 1 for y in x if y < 4\]] *)
+              - Example: [[y for x in l if len(x) > 1 for y in x if y < 4]] *)
       set_comp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
           (** Represents a set comprehension.
 
               - Example: [{x for x in l}] *)
       dict_comp :
         location:'location -> key:'expr -> value:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a dict comprehension. See {{:https://www.python.org/dev/peps/pep-0274/} PEP
-              274}.
+          (** Represents a dict comprehension. See
+              {{:https://www.python.org/dev/peps/pep-0274/} PEP 274}.
 
               - Example: [{x:y for x, y in l}] *)
       generator_exp : location:'location -> elt:'expr -> generators:'comprehension list -> 'expr;
-          (** Represents a generator expression. See {{:https://www.python.org/dev/peps/pep-0289/}
-              PEP 289}.
+          (** Represents a generator expression. See
+              {{:https://www.python.org/dev/peps/pep-0289/} PEP 289}.
 
               - Example: [(x for x in l)] *)
       await : location:'location -> value:'expr -> 'expr;
-          (** Represents an await expression. See {{:https://www.python.org/dev/peps/pep-0492/} PEP
-              492}.
+          (** Represents an await expression. See
+              {{:https://www.python.org/dev/peps/pep-0492/} PEP 492}.
 
               - Example: [await foo] *)
       yield : location:'location -> value:'expr option -> 'expr;
@@ -553,8 +555,8 @@ def foo(
               - Example: [(yield)]
               - Example: [(yield x)] *)
       yield_from : location:'location -> value:'expr -> 'expr;
-          (** Represents a yield from expression. See {{:https://www.python.org/dev/peps/pep-0380/}
-              PEP 380}.
+          (** Represents a yield from expression. See
+              {{:https://www.python.org/dev/peps/pep-0380/} PEP 380}.
 
               - Example: [(yield from x)] *)
       compare :
@@ -602,7 +604,7 @@ def foo(
       subscript : location:'location -> value:'expr -> slice:'expr -> ctx:'expr_context -> 'expr;
           (** Represents a subscript access expression.
 
-              - Example: [a\[b\]] *)
+              - Example: [a[b]] *)
       starred : location:'location -> value:'expr -> ctx:'expr_context -> 'expr;
           (** Represents an starred expression, which is used to represent iterable unpacking
               (inside [call], [list], or comprehension expressions, for example). See
@@ -614,9 +616,9 @@ def foo(
       list : location:'location -> elts:'expr list -> ctx:'expr_context -> 'expr;
           (** Represents a Python list display.
 
-              - Example: [\[\]]
-              - Example: [\[a, b\]]
-              - Example: [\[a, *b\]] *)
+              - Example: [[]]
+              - Example: [[a, b]]
+              - Example: [[a, *b]] *)
       tuple : location:'location -> elts:'expr list -> ctx:'expr_context -> 'expr;
           (** Represents a Python tuple display.
 
@@ -629,8 +631,8 @@ def foo(
               [slice] field of the [subscript] expression, either directly or as an element of a
               [tuple] expression.
 
-              - Example: [a\[:\]]
-              - Example: [a\[1:2, 3:4\]] *)
+              - Example: [a[:]]
+              - Example: [a[1:2, 3:4]] *)
     }
 
     val make :
@@ -673,9 +675,9 @@ def foo(
       [context_expr] and no [optional_vars].
 
       Note that [optional_vars] is "target"-like: It can only be one of a selected few kinds of
-      expressions, and the corresponding expression context will always be set to {!field:
-      ExpressionContext.store}. See documentation of {!module: ExpressionContext} for more details
-      of which expressions are allowed. *)
+      expressions, and the corresponding expression context will always be set to
+      {!field:ExpressionContext.store}. See documentation of {!module: ExpressionContext} for more
+      details of which expressions are allowed. *)
   module WithItem : sig
     type ('expr, 'with_item) t = context_expr:'expr -> optional_vars:'expr option -> 'with_item
   end
@@ -781,7 +783,8 @@ def foo(
            'match_case,
            'with_item,
            'stmt)
-         t = private {
+         t =
+      private {
       function_def :
         location:'location ->
         name:'identifier ->
@@ -798,8 +801,8 @@ def foo(
               - [body] is the body of the function.
               - [decorator_list] is the list of decorators applied to the function.
               - [returns] is the (optionally specified) return annotation.
-              - [type_comment] is the Py2-style type comment for the function (see {!val:
-                Parser.TaglessFinal.parse_function_type}). *)
+              - [type_comment] is the Py2-style type comment for the function (see
+                {!val:Parser.TaglessFinal.parse_function_type}). *)
       async_function_def :
         location:'location ->
         name:'identifier ->
@@ -840,9 +843,9 @@ def foo(
 
               - [targets] is the values to delete (guaranteed by CPython parser to be non-empty).
                 Deletion can only be one of a selected few kinds of expressions, and the
-                corresponding expression context will always be set to {!field:
-                ExpressionContext.del}. See documentation of {!module: ExpressionContext} for more
-                details of which expressions are allowed. *)
+                corresponding expression context will always be set to
+                {!field:ExpressionContext.del}. See documentation of {!module: ExpressionContext}
+                for more details of which expressions are allowed. *)
       assign :
         location:'location ->
         targets:'expr list ->
@@ -904,8 +907,8 @@ def foo(
 
               - [target] is the "index variable" of the statement. It can only be one of a selected
                 few kinds of expressions, and the corresponding expression context will always be
-                set to {!field: ExpressionContext.store}. See documentation of {!module:
-                ExpressionContext} for more details of which expressions are allowed.
+                set to {!field: ExpressionContext.store}. See documentation of
+                {!module:ExpressionContext} for more details of which expressions are allowed.
               - [iter] is the expression that is being iterated on.
               - [body] is the body of the loop.
               - [orelse] is the list of statements that will be executed when the loop finishes.
@@ -941,8 +944,8 @@ def foo(
         body:'stmt list ->
         type_comment:string option ->
         'stmt;
-          (** Represent a [with] statement. See {{:https://www.python.org/dev/peps/pep-0343/} PEP
-              343}.
+          (** Represent a [with] statement. See
+              {{:https://www.python.org/dev/peps/pep-0343/} PEP 343}.
 
               - [items] is the "context expression" which will be evaluated to obtain a context
                 manager.
@@ -961,8 +964,8 @@ def foo(
           (** Represent an [async with] statement. It has exactly the same set of fields as [with]
               statement. *)
       match_ : location:'location -> subject:'expr -> cases:'match_case list -> 'stmt;
-          (** Represent a [match] statement. See {{:https://www.python.org/dev/peps/pep-0622/} PEP
-              622}.
+          (** Represent a [match] statement. See
+              {{:https://www.python.org/dev/peps/pep-0622/} PEP 622}.
 
               - [subject] is the expression that will be matched on.
               - [cases] is the list of branches for this match. See {!module: MatchCase} for more
@@ -998,8 +1001,8 @@ def foo(
         orelse:'stmt list ->
         finalbody:'stmt list ->
         'stmt;
-          (** Represent a [try...except*] statement. See {{:https://peps.python.org/pep-0654/} PEP
-              654}.
+          (** Represent a [try...except*] statement. See
+              {{:https://peps.python.org/pep-0654/} PEP 654}.
 
               Arguments here means the same thing as the [try...except] statement, except that the
               [handlers] part should be interpreted as catching&handling exception groups. *)
@@ -1027,8 +1030,8 @@ def foo(
 
               - [names] is a list of names in the current block to declare as global. *)
       nonlocal : location:'location -> names:'identifier list -> 'stmt;
-          (** Represent a [nonlocal] statement. See {{:https://www.python.org/dev/peps/pep-3104/}
-              PEP 3104}.
+          (** Represent a [nonlocal] statement. See
+              {{:https://www.python.org/dev/peps/pep-3104/} PEP 3104}.
 
               - [names] is a list of names in the current block to declare as nonlocal. *)
       expr : location:'location -> value:'expr -> 'stmt;
@@ -1142,8 +1145,8 @@ def foo(
       body:'stmt list -> type_ignores:'type_ignore list -> 'module_
   end
 
-  (** This module provides a type that represents a Python function type signature. See {!val:
-      Parser.TaglessFinal.parse_function_type}. *)
+  (** This module provides a type that represents a Python function type signature. See
+      {!val:Parser.TaglessFinal.parse_function_type}. *)
   module FunctionType : sig
     type ('expr, 'function_type) t = argtypes:'expr list -> returns:'expr -> 'function_type
   end
@@ -1171,7 +1174,8 @@ def foo(
          'type_ignore,
          'unary_operator,
          'with_item)
-       t = private {
+       t =
+    private {
     argument : ('expression, 'identifier, 'location, 'argument) Argument.t;
     arguments : ('argument, 'expression, 'arguments) Arguments.t;
     binary_operator : 'binary_operator BinaryOperator.t;
@@ -1689,8 +1693,8 @@ module Concrete : sig
 end
 
 (** This module contains all parsing APIs, i.e. functions that transfrom plain strings into
-    syntactical constructs. These APIs will always hand back a {!type: Result.t} where if the
-    parsing fails, a {!type: Parser.Error.t} gets returned.
+    syntactical constructs. These APIs will always hand back a {!type: result} where if the parsing
+    fails, a {!type: Parser.Error.t} gets returned.
 
     Under the hood, this library actually compiles and calls into the actual CPython parser code,
     and then walks through the CPython AST translating them into OCaml structures via C bindings.
@@ -1699,9 +1703,9 @@ end
     some notable implications:
 
     - The parsing APIs are stateful as one need to intialize/finalize CPython runtime before
-      invoking its parser. The low-level details are abstracted away with the {!module:
-      Parser.Context} module, but the fact that no parsing can be done prior to obtaining a {!type:
-      Parser.Context.t} still holds.
+      invoking its parser. The low-level details are abstracted away with the
+      {!module:Parser.Context} module, but the fact that no parsing can be done prior to obtaining a
+      {!type:Parser.Context.t} still holds.
     - Text encoding support is crippled. A large part of Unicode handling in CPython is provided via
       extension modules, which a barely-initialized CPython runtime cannot handle. For example,
       Unicode character in identifier name is not allowed, and "\N" escape sequence in string
@@ -1751,9 +1755,9 @@ module Parser : sig
       - Traversals are post-order: child constructs will be visited before the parent constructs.
 
       - If a parent construct contains more than one child constructs, these child constructs will
-        be visited in their order of appearance (e.g. for {!field:
-        PyreAst.TaglessFinal.Expression.name}, the [location] field will be visited first, then
-        [name], and finally [ctx]).
+        be visited in their order of appearance (e.g. for
+        {!field:PyreAst.TaglessFinal.Expression.name}, the [location] field will be visited first,
+        then [name], and finally [ctx]).
 
       - For list-like constructs, however, the visiting order will be the {i reverse} of the
         appearance order (e.g. when parsing a module [x = 1; y = 2], the second statement [y = 2]
@@ -1847,7 +1851,7 @@ module Parser : sig
         Function type signature is not a reified construct in the core Python langugage. They only
         appears in
         {{:https://www.python.org/dev/peps/pep-0484/#suggested-syntax-for-python-2-7-and-straddling-code}
-        Python2-style typing comments} for functions and are superceded by the inline annotation
+          Python2-style typing comments} for functions and are superceded by the inline annotation
         syntax added in Python3. This API is provided here for completeness, in case downstream
         clients want to support the old comment-style annotation. *)
   end
