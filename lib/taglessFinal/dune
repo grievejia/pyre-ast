@@ -33,5 +33,5 @@
   (language c)
   (names binding)
   (flags :standard -Ivendor/Include -I.))
- (c_library_flags -lutil)
+ (c_library_flags -lutil -lintl)
  (foreign_archives python))
