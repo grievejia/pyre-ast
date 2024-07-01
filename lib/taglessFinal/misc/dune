@@ -1,0 +1,3 @@
+(executable
+ (name discover_ldflag)
+ (libraries sexplib unix))
