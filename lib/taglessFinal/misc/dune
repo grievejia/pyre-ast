@@ -1,3 +1,9 @@
 (executable
  (name discover_ldflag)
+ (modules discover_ldflag)
  (libraries sexplib unix))
+
+(executable
+ (name fix_python_config)
+ (modules fix_python_config)
+ (libraries stdio str))

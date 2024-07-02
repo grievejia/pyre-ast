@@ -28,9 +28,16 @@
 (rule
  (deps
   (file python-config.sh))
+ (targets python-config-fixed.sh)
+ (action
+  (run ./misc/fix_python_config.exe python-config.sh)))
+
+(rule
+ (deps
+  (file python-config-fixed.sh))
  (targets ldflags.sexp)
  (action
-  (run ./misc/discover_ldflag.exe python-config.sh)))
+  (run ./misc/discover_ldflag.exe python-config-fixed.sh)))
 
 (library
  (name taglessFinal)
