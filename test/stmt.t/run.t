@@ -435,7 +435,7 @@ Test function def stmt
 Test async function def stmt
   $ echo "async def foo(x: int, y: bool = False): pass" | parse module -
   ((body
-    ((FunctionDef
+    ((AsyncFunctionDef
       (location ((start ((line 1) (column 0))) (stop ((line 1) (column 44)))))
       (name foo)
       (args

@@ -1760,7 +1760,7 @@ CAMLprim value visit_async_function_def_stmt(value visitor_value,
   value args[8] = {location_value,     name_value,           args_value,
                    body_value,         decorator_list_value, returns_value,
                    type_comment_value, type_params_value};
-  result = caml_callbackN(STMT_FUNCTION_DEF(visitor_value), 8, args);
+  result = caml_callbackN(STMT_ASYNC_FUNCTION_DEF(visitor_value), 8, args);
 
   CAMLreturn(result);
 }
