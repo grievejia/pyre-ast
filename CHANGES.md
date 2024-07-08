@@ -1,3 +1,7 @@
+## 0.1.11 (2024-7-8)
+
+- Fixed a major bug in 0.1.10 where the parser cannot differentiate `async def` and `def`. 
+
 ## 0.1.10 (2024-6-17)
 
 - Bump the bundled CPython version to 3.12.3
